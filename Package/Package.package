@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" dslVersion="1.0.0.0" Id="1edb5daf-566f-4239-9a65-4dfc51d0fcaa" solutionId="1edb5daf-566f-4239-9a65-4dfc51d0fcaa" resetWebServer="false" sharePointProductVersion="15.0" name="Nauplius.SharePoint.FoundationSync" xmlns="http://schemas.microsoft.com/VisualStudio/2008/SharePointTools/PackageModel">
+  <features>
+    <featureReference itemId="3b0183fd-7888-4d91-9f19-cb96777f6aef" />
+  </features>
+  <projectItems>
+    <projectItemReference itemId="0f9ca893-a051-403f-abc4-d6659d2dc58c" />
+  </projectItems>
+</package>
