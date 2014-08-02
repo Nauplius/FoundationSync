@@ -1,4 +1,8 @@
-﻿using System.Security.Principal;
+﻿using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Net;
+using System.Security.Principal;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
 using Microsoft.SharePoint.Administration.Claims;
@@ -193,7 +197,8 @@ namespace Nauplius.SP.UserSync
                         properties = new[]
                         {
                             "displayName", "mail", "title", "mobile", "proxyAddresses", "department",
-                            "sn", "givenName", "telephoneNumber", "wWWHomePage", "physicalDeliveryOfficeName"
+                            "sn", "givenName", "telephoneNumber", "wWWHomePage", "physicalDeliveryOfficeName",
+                            "thumbnailPhoto"
                         };
 
                         var entry = new DirectoryEntry("LDAP://" + ldapPath);
@@ -303,6 +308,8 @@ namespace Nauplius.SP.UserSync
                                               ? string.Empty
                                               : directoryEntry.Properties["mobile"].Value.ToString();
 
+                    item["Picture"] = GetThumbnail(user, directoryEntry);
+
                     try
                     {
                         if (directoryEntry.Properties["proxyAddresses"].Value != null)
@@ -345,6 +352,97 @@ namespace Nauplius.SP.UserSync
                 FoudationSync.LogMessage(401, FoudationSync.LogCategories.FoundationSync,
                     TraceSeverity.Unexpected, exception.Message + " " + exception.StackTrace, null);
             }
+        }
+
+        private static string GetThumbnail(SPUser user, DirectoryEntry directoryEntry)
+        {
+            var farm = SPFarm.Local;
+            var siteUri = (string)farm.Properties["pictureStorageUrl"];
+            var fileUri = string.Empty;
+
+            if ((string) farm.Properties["useExchange"] == "true")
+            {
+                const string size = "HR648x648";
+                var uri = new UriBuilder(string.Format("{0}/s/GetUserPhoto?email={1}&{2}", farm.Properties["ewsUrl"], user.Email, size));
+                var request = (HttpWebRequest)WebRequest.Create(uri.Uri);
+                request.Credentials = CredentialCache.DefaultNetworkCredentials;
+
+                try
+                {
+                    using (var response = (HttpWebResponse) request.GetResponse())
+                    {
+                        if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NotModified)
+                        {
+                            if (response.GetResponseStream() != null)
+                            {
+                                var image = new Bitmap(response.GetResponseStream());
+                                fileUri = SaveImage(user, image, siteUri);
+                            }
+                        }
+                        //else Exchange is not online, incorrect URL, etc.
+                    }
+                }
+                catch (Exception)
+                {
+                    //add ULS logging
+                    return null;
+                }
+            }
+            else
+            {
+                var byteArray = (byte[])directoryEntry.Properties["thumbnailPhoto"][0];
+
+                if (byteArray.Length > 0)
+                {
+                    using (var ms = new MemoryStream(byteArray))
+                    {
+                        var image = new Bitmap(ms);
+                        fileUri = SaveImage(user, image, siteUri);
+                    }
+                }
+            }
+
+            return !string.IsNullOrEmpty(fileUri) ? fileUri : null;
+        }
+
+        private static string SaveImage(SPUser user, Bitmap image, string siteUri)
+        {
+            try
+            {
+                using (SPSite site = new SPSite(siteUri))
+                {
+                    using (SPWeb web = site.RootWeb)
+                    {
+                        var library = web.Folders["UserPhotos"];
+                        var fileName = user.LoginName + ".jpg";
+
+                        var byteArray = new byte[0];
+
+                        using (var ms = new MemoryStream())
+                        {
+                            image.Save(ms, ImageFormat.Jpeg);
+                            ms.Close();
+
+                            byteArray = ms.ToArray();
+                        }
+
+                        if (byteArray.Length > 0)
+                        {
+                            var file = library.Files.Add(fileName, byteArray);
+                            library.Update();
+
+                            return (string) file.Item[SPBuiltInFieldId.EncodedAbsUrl];
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                //add ULS logging
+                return null;
+            }
+
+            return null;
         }
     }
 }
