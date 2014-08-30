@@ -2,7 +2,9 @@
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Text;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
 using Microsoft.SharePoint.Administration.Claims;
@@ -308,7 +310,10 @@ namespace Nauplius.SP.UserSync
                                               ? string.Empty
                                               : directoryEntry.Properties["mobile"].Value.ToString();
 
-                    item["Picture"] = GetThumbnail(user, directoryEntry);
+                    if (user.SystemUserKey != null)
+                    {
+                        item["Picture"] = GetThumbnail(user, directoryEntry);                       
+                    }
 
                     try
                     {
@@ -360,6 +365,52 @@ namespace Nauplius.SP.UserSync
             var siteUri = (string)farm.Properties["pictureStorageUrl"];
             var fileUri = string.Empty;
 
+            //One-way hash of SystemUserKey, typically a SID.
+            var sHash = SHA1.Create();
+            var encoding = new ASCIIEncoding();
+            var userBytes = encoding.GetBytes(user.SystemUserKey);
+            var userHash = sHash.ComputeHash(userBytes);
+            var userHashString = Convert.ToBase64String(userHash);
+            
+            //The / is the only illegal character for SharePoint in a Base64 string
+            //Replacing it with $, which is not valid in a Base64 string, but works for our purposes
+
+            userHashString = userHashString.Replace("/", "$");
+
+            var fileName = string.Format("{0}{1}", userHashString, ".jpg");
+
+            try
+            {
+                using (SPSite site = new SPSite(siteUri))
+                {
+                    using (SPWeb web = site.RootWeb)
+                    {
+                        var list = web.GetList("UserPhotos");
+                        var folder = list.RootFolder;
+                        var file = folder.Files[fileName];
+
+                        if (file.Length > 1)
+                        {
+                            var pictureExpiryDays = 1;
+
+                            if (farm.Properties.ContainsKey("pictureExpiryDays"))
+                            {
+                                pictureExpiryDays = (int) farm.Properties["pictureExpiryDays"];
+                            }
+
+                            if ((file.TimeLastModified - DateTime.Now).TotalDays < pictureExpiryDays)
+                            {
+                                return (string)file.Item[SPBuiltInFieldId.EncodedAbsUrl];
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                //File not found, etc. Discard exception and continue.
+            }
+
             if ((string) farm.Properties["useExchange"] == "true")
             {
                 const string size = "HR648x648";
@@ -376,7 +427,7 @@ namespace Nauplius.SP.UserSync
                             if (response.GetResponseStream() != null)
                             {
                                 var image = new Bitmap(response.GetResponseStream());
-                                fileUri = SaveImage(user, image, siteUri);
+                                fileUri = SaveImage(user, image, siteUri, fileName);
                             }
                         }
                         //else Exchange is not online, incorrect URL, etc.
@@ -398,7 +449,7 @@ namespace Nauplius.SP.UserSync
                     using (var ms = new MemoryStream(byteArray))
                     {
                         var image = new Bitmap(ms);
-                        fileUri = SaveImage(user, image, siteUri);
+                        fileUri = SaveImage(user, image, siteUri, fileName);
                     }
                 }
             }
@@ -406,7 +457,7 @@ namespace Nauplius.SP.UserSync
             return !string.IsNullOrEmpty(fileUri) ? fileUri : null;
         }
 
-        private static string SaveImage(SPUser user, Bitmap image, string siteUri)
+        private static string SaveImage(SPUser user, Bitmap image, string siteUri, string fileName)
         {
             try
             {
@@ -415,7 +466,7 @@ namespace Nauplius.SP.UserSync
                     using (SPWeb web = site.RootWeb)
                     {
                         var library = web.Lists["UserPhotos"];
-                        var fileName = user.SystemUserKey + ".jpg";
+
 
                         var byteArray = new byte[0];
 
