@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
@@ -10,10 +11,7 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (!Page.IsPostBack)
-            {
-                LoadSettings();
-            }
+            LoadSettings();
         }
 
         protected void btnSave_OnClick(object sender, EventArgs e)
@@ -43,14 +41,23 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             {
                 var response = (HttpWebResponse)request.GetResponse();
                 var farm = SPFarm.Local;
-                farm.Properties["pictureStorageUrl"] = tBox1.Text + "/UserPhotos";
-                farm.Update();
+                var url = tBox1.Text + "/UserPhotos";
+
+                if (farm.Properties.ContainsKey("pictureStorageUrl"))
+                {
+                    farm.Properties["pictureStorageUrl"] = url;
+                }
+                else
+                {
+                    farm.Properties.Add("pictureStorageUrl", url);
+                }
+
+                farm.Update(true);
                 return response.StatusCode == HttpStatusCode.OK;
             }
             catch (Exception)
             {
-                //not a valid location or access denied
-                throw;
+                //not a valid location or access denied; add ULS logging
             }
 
             return false;
@@ -69,14 +76,31 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             {
                 var response = (HttpWebResponse)request.GetResponse();
                 var farm = SPFarm.Local;
-                farm.Properties["useExchange"] = "true";
-                farm.Properties["ewsUrl"] = uri.Uri.ToString();
-                farm.Update();
+
+                if (farm.Properties.ContainsKey("useExchange"))
+                {
+                    farm.Properties["useExchange"] = "true";
+                }
+                else
+                {
+                    farm.Properties.Add("useExchange", "true");
+                }
+
+                if (farm.Properties.ContainsKey("ewsUrl"))
+                {
+                    farm.Properties["ewsUrl"] = uri.Uri.ToString();
+                }
+                else
+                {
+                    farm.Properties.Add("ewsUrl", uri.Uri.ToString());
+                }
+
+                farm.Update(true);
                 return response.StatusCode == HttpStatusCode.OK;
             }
             catch (Exception)
             {
-                throw;
+                //Log to ULS, unable to add property values
             }
 
             return false;
@@ -84,7 +108,46 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
 
         internal void LoadSettings()
         {
+            var farm = SPFarm.Local;
 
+            try
+            {
+                if (farm.Properties.ContainsKey("useExchange") && (string) farm.Properties["useExchange"] == "true")
+                {
+                    if (!string.IsNullOrEmpty(farm.Properties["ewsUrl"].ToString()))
+                    {
+                        tBox2.Text = farm.Properties["ewsUrl"].ToString();
+                    }
+                    else
+                    {
+                        farm.Properties["useExchange"] = "false";
+                        farm.Update();
+                    }   
+                }
+            }
+            catch (Exception)
+            {
+                //add to ULS logs, log message as unable to get property useExchange/ewsUrl.
+            }
+
+            try
+            {
+                if (farm.Properties.ContainsKey("pictureStorageUrl") && !string.IsNullOrEmpty(farm.Properties["pictureStorageUrl"].ToString()))
+                {
+                    //validate URI
+
+                    var url = farm.Properties["pictureStorageUrl"].ToString();
+                    var index = url.LastIndexOf("/");
+
+                    if (index > 0)
+                        url = url.Substring(0, index);
+                    tBox1.Text = url;
+                }
+            }
+            catch (Exception)
+            {
+                //add to ULS logs, log message as unable to get property pictureStorageUrl
+            }
         }
     }
 }

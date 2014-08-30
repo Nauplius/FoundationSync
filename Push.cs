@@ -382,9 +382,10 @@ namespace Nauplius.SP.UserSync
                         //else Exchange is not online, incorrect URL, etc.
                     }
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
-                    //add ULS logging
+                    FoudationSync.LogMessage(601, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                        exception.Message + exception.StackTrace, null);
                     return null;
                 }
             }
@@ -413,8 +414,8 @@ namespace Nauplius.SP.UserSync
                 {
                     using (SPWeb web = site.RootWeb)
                     {
-                        var library = web.Folders["UserPhotos"];
-                        var fileName = user.LoginName + ".jpg";
+                        var library = web.Lists["UserPhotos"];
+                        var fileName = user.SystemUserKey + ".jpg";
 
                         var byteArray = new byte[0];
 
@@ -428,18 +429,17 @@ namespace Nauplius.SP.UserSync
 
                         if (byteArray.Length > 0)
                         {
-                            var file = library.Files.Add(fileName, byteArray);
-                            library.Update();
+                            var file = library.RootFolder.Files.Add(fileName, byteArray, true);
 
                             return (string) file.Item[SPBuiltInFieldId.EncodedAbsUrl];
                         }
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                //add ULS logging
-                return null;
+                FoudationSync.LogMessage(701, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                    exception.Message + exception.StackTrace, null);
             }
 
             return null;
