@@ -312,7 +312,15 @@ namespace Nauplius.SP.UserSync
 
                     if (user.SystemUserKey != null)
                     {
-                        item["Picture"] = GetThumbnail(user, directoryEntry);                       
+                        var uri = GetThumbnail(user, directoryEntry);
+                        if (!string.IsNullOrEmpty(uri))
+                        {
+                            item["Picture"] = uri;
+                        }
+                        else if (string.IsNullOrEmpty(uri))
+                        {
+                            item["Picture"] = string.Empty;
+                        }
                     }
 
                     try
@@ -411,34 +419,50 @@ namespace Nauplius.SP.UserSync
                 //File not found, etc. Discard exception and continue.
             }
 
-            if ((string) farm.Properties["useExchange"] == "true")
+            if ((string) farm.Properties["useExchange"] == "True")
             {
-                const string size = "HR648x648";
-                var uri = new UriBuilder(string.Format("{0}/s/GetUserPhoto?email={1}&{2}", farm.Properties["ewsUrl"], user.Email, size));
-                var request = (HttpWebRequest)WebRequest.Create(uri.Uri);
-                request.Credentials = CredentialCache.DefaultNetworkCredentials;
+                var ewsPictureSize = "648x648";
 
-                try
+                if (farm.Properties.ContainsKey("ewsPictureSize"))
                 {
-                    using (var response = (HttpWebResponse) request.GetResponse())
+                    ewsPictureSize = (string)farm.Properties["ewsPictureSize"];
+                }
+
+                var uri = new UriBuilder(string.Format("{0}/s/GetUserPhoto?email={1}&size=HR{2}", farm.Properties["ewsUrl"], user.Email, ewsPictureSize));
+
+                SPSecurity.RunWithElevatedPrivileges(delegate
+                {
+                    var request = (HttpWebRequest)WebRequest.Create(uri.Uri);
+                    request.UseDefaultCredentials = true;
+
+                    try
                     {
-                        if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NotModified)
+                        using (var response = (HttpWebResponse)request.GetResponse())
                         {
-                            if (response.GetResponseStream() != null)
+                            if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NotModified)
                             {
-                                var image = new Bitmap(response.GetResponseStream());
-                                fileUri = SaveImage(user, image, siteUri, fileName);
+                                if (response.GetResponseStream() != null)
+                                {
+                                    var image = new Bitmap(response.GetResponseStream());
+                                    fileUri = SaveImage(user, image, siteUri, fileName);
+                                }
                             }
+                            else if (response.StatusCode == HttpStatusCode.NotFound ||
+                                        response.StatusCode == HttpStatusCode.InternalServerError ||
+                                        response.StatusCode == HttpStatusCode.ServiceUnavailable)
+                            {
+                                fileUri = string.Empty;
+                            }
+                            //else Exchange is not online, incorrect URL, etc.
                         }
-                        //else Exchange is not online, incorrect URL, etc.
                     }
-                }
-                catch (Exception exception)
-                {
-                    FoudationSync.LogMessage(601, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                        exception.Message + exception.StackTrace, null);
-                    return null;
-                }
+                    catch (Exception exception)
+                    {
+                        FoudationSync.LogMessage(601, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                            exception.Message + exception.StackTrace, null);
+                    }
+
+                });
             }
             else
             {

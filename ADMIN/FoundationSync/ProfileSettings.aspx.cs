@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
@@ -17,15 +16,35 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
         protected void btnSave_OnClick(object sender, EventArgs e)
         {
             bool site, exchange = false;
+            var farm = SPFarm.Local;
 
             if (!string.IsNullOrEmpty(tBox1.Text))
             {
                 site = ValidateSiteCollection();
             }
+            else
+            {
+                if (farm.Properties.ContainsKey("pictureStorageUrl"))
+                {
+                    farm.Properties.Remove("pictureStorageUrl");
+                }
+            }
 
             if (!string.IsNullOrEmpty(tBox2.Text))
             {
                 exchange = ValidateExchangeConnection();
+            }
+            else
+            {
+                if (farm.Properties.ContainsKey("useExchange"))
+                {
+                    farm.Properties.Remove("useExchange");
+                }
+
+                if (farm.Properties.ContainsKey("ewsUrl"))
+                {
+                    farm.Properties.Remove("ewsUrl");
+                }
             }
         }
 
@@ -65,43 +84,44 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
 
         internal bool ValidateExchangeConnection()
         {
-            var credentials = new CredentialCache();
             if (!Uri.IsWellFormedUriString(tBox2.Text, UriKind.Absolute)) return false;
 
             var uri = new UriBuilder(tBox2.Text);
             var request = (HttpWebRequest)WebRequest.Create(uri.Uri);
-            request.Credentials = CredentialCache.DefaultNetworkCredentials;
+            request.UseDefaultCredentials = true;
 
-            try
+            SPSecurity.RunWithElevatedPrivileges(delegate
             {
-                var response = (HttpWebResponse)request.GetResponse();
-                var farm = SPFarm.Local;
+                try
+                {
+                    var response = (HttpWebResponse)request.GetResponse();
+                    var farm = SPFarm.Local;
 
-                if (farm.Properties.ContainsKey("useExchange"))
-                {
-                    farm.Properties["useExchange"] = "true";
-                }
-                else
-                {
-                    farm.Properties.Add("useExchange", "true");
-                }
+                    if (farm.Properties.ContainsKey("useExchange"))
+                    {
+                        farm.Properties["useExchange"] = "True";
+                    }
+                    else
+                    {
+                        farm.Properties.Add("useExchange", "True");
+                    }
 
-                if (farm.Properties.ContainsKey("ewsUrl"))
-                {
-                    farm.Properties["ewsUrl"] = uri.Uri.ToString();
-                }
-                else
-                {
-                    farm.Properties.Add("ewsUrl", uri.Uri.ToString());
-                }
+                    if (farm.Properties.ContainsKey("ewsUrl"))
+                    {
+                        farm.Properties["ewsUrl"] = uri.Uri.ToString();
+                    }
+                    else
+                    {
+                        farm.Properties.Add("ewsUrl", uri.Uri.ToString());
+                    }
 
-                farm.Update(true);
-                return response.StatusCode == HttpStatusCode.OK;
-            }
-            catch (Exception)
-            {
-                //Log to ULS, unable to add property values
-            }
+                    farm.Update(true);
+                }
+                catch (Exception)
+                {
+                    //Log to ULS, unable to add property values
+                }                
+            });
 
             return false;
         }
@@ -112,7 +132,7 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
 
             try
             {
-                if (farm.Properties.ContainsKey("useExchange") && (string) farm.Properties["useExchange"] == "true")
+                if (farm.Properties.ContainsKey("useExchange") && (string) farm.Properties["useExchange"] == "True")
                 {
                     if (!string.IsNullOrEmpty(farm.Properties["ewsUrl"].ToString()))
                     {
@@ -120,7 +140,7 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
                     }
                     else
                     {
-                        farm.Properties["useExchange"] = "false";
+                        farm.Properties["useExchange"] = "False";
                         farm.Update();
                     }   
                 }
