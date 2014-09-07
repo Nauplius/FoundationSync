@@ -10,24 +10,41 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (!Page.IsPostBack)
-            {
-                LoadSettings();
-            }
+            LoadSettings();
         }
 
         protected void btnSave_OnClick(object sender, EventArgs e)
         {
             bool site, exchange = false;
+            var farm = SPFarm.Local;
 
             if (!string.IsNullOrEmpty(tBox1.Text))
             {
                 site = ValidateSiteCollection();
             }
+            else
+            {
+                if (farm.Properties.ContainsKey("pictureStorageUrl"))
+                {
+                    farm.Properties.Remove("pictureStorageUrl");
+                }
+            }
 
             if (!string.IsNullOrEmpty(tBox2.Text))
             {
                 exchange = ValidateExchangeConnection();
+            }
+            else
+            {
+                if (farm.Properties.ContainsKey("useExchange"))
+                {
+                    farm.Properties.Remove("useExchange");
+                }
+
+                if (farm.Properties.ContainsKey("ewsUrl"))
+                {
+                    farm.Properties.Remove("ewsUrl");
+                }
             }
         }
 
@@ -43,14 +60,23 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             {
                 var response = (HttpWebResponse)request.GetResponse();
                 var farm = SPFarm.Local;
-                farm.Properties["pictureStorageUrl"] = tBox1.Text + "/UserPhotos";
-                farm.Update();
+                var url = tBox1.Text + "/UserPhotos";
+
+                if (farm.Properties.ContainsKey("pictureStorageUrl"))
+                {
+                    farm.Properties["pictureStorageUrl"] = url;
+                }
+                else
+                {
+                    farm.Properties.Add("pictureStorageUrl", url);
+                }
+
+                farm.Update(true);
                 return response.StatusCode == HttpStatusCode.OK;
             }
             catch (Exception)
             {
-                //not a valid location or access denied
-                throw;
+                //not a valid location or access denied; add ULS logging
             }
 
             return false;
@@ -58,33 +84,90 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
 
         internal bool ValidateExchangeConnection()
         {
-            var credentials = new CredentialCache();
             if (!Uri.IsWellFormedUriString(tBox2.Text, UriKind.Absolute)) return false;
 
             var uri = new UriBuilder(tBox2.Text);
             var request = (HttpWebRequest)WebRequest.Create(uri.Uri);
-            request.Credentials = CredentialCache.DefaultNetworkCredentials;
+            request.UseDefaultCredentials = true;
 
-            try
+            SPSecurity.RunWithElevatedPrivileges(delegate
             {
-                var response = (HttpWebResponse)request.GetResponse();
-                var farm = SPFarm.Local;
-                farm.Properties["useExchange"] = "true";
-                farm.Properties["ewsUrl"] = uri.Uri.ToString();
-                farm.Update();
-                return response.StatusCode == HttpStatusCode.OK;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+                try
+                {
+                    var response = (HttpWebResponse)request.GetResponse();
+                    var farm = SPFarm.Local;
+
+                    if (farm.Properties.ContainsKey("useExchange"))
+                    {
+                        farm.Properties["useExchange"] = "True";
+                    }
+                    else
+                    {
+                        farm.Properties.Add("useExchange", "True");
+                    }
+
+                    if (farm.Properties.ContainsKey("ewsUrl"))
+                    {
+                        farm.Properties["ewsUrl"] = uri.Uri.ToString();
+                    }
+                    else
+                    {
+                        farm.Properties.Add("ewsUrl", uri.Uri.ToString());
+                    }
+
+                    farm.Update(true);
+                }
+                catch (Exception)
+                {
+                    //Log to ULS, unable to add property values
+                }                
+            });
 
             return false;
         }
 
         internal void LoadSettings()
         {
+            var farm = SPFarm.Local;
 
+            try
+            {
+                if (farm.Properties.ContainsKey("useExchange") && (string) farm.Properties["useExchange"] == "True")
+                {
+                    if (!string.IsNullOrEmpty(farm.Properties["ewsUrl"].ToString()))
+                    {
+                        tBox2.Text = farm.Properties["ewsUrl"].ToString();
+                    }
+                    else
+                    {
+                        farm.Properties["useExchange"] = "False";
+                        farm.Update();
+                    }   
+                }
+            }
+            catch (Exception)
+            {
+                //add to ULS logs, log message as unable to get property useExchange/ewsUrl.
+            }
+
+            try
+            {
+                if (farm.Properties.ContainsKey("pictureStorageUrl") && !string.IsNullOrEmpty(farm.Properties["pictureStorageUrl"].ToString()))
+                {
+                    //validate URI
+
+                    var url = farm.Properties["pictureStorageUrl"].ToString();
+                    var index = url.LastIndexOf("/");
+
+                    if (index > 0)
+                        url = url.Substring(0, index);
+                    tBox1.Text = url;
+                }
+            }
+            catch (Exception)
+            {
+                //add to ULS logs, log message as unable to get property pictureStorageUrl
+            }
         }
     }
 }

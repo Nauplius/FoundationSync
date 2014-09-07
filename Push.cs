@@ -2,7 +2,9 @@
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Text;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
 using Microsoft.SharePoint.Administration.Claims;
@@ -308,7 +310,18 @@ namespace Nauplius.SP.UserSync
                                               ? string.Empty
                                               : directoryEntry.Properties["mobile"].Value.ToString();
 
-                    item["Picture"] = GetThumbnail(user, directoryEntry);
+                    if (user.SystemUserKey != null)
+                    {
+                        var uri = GetThumbnail(user, directoryEntry);
+                        if (!string.IsNullOrEmpty(uri))
+                        {
+                            item["Picture"] = uri;
+                        }
+                        else if (string.IsNullOrEmpty(uri))
+                        {
+                            item["Picture"] = string.Empty;
+                        }
+                    }
 
                     try
                     {
@@ -360,33 +373,96 @@ namespace Nauplius.SP.UserSync
             var siteUri = (string)farm.Properties["pictureStorageUrl"];
             var fileUri = string.Empty;
 
-            if ((string) farm.Properties["useExchange"] == "true")
-            {
-                const string size = "HR648x648";
-                var uri = new UriBuilder(string.Format("{0}/s/GetUserPhoto?email={1}&{2}", farm.Properties["ewsUrl"], user.Email, size));
-                var request = (HttpWebRequest)WebRequest.Create(uri.Uri);
-                request.Credentials = CredentialCache.DefaultNetworkCredentials;
+            //One-way hash of SystemUserKey, typically a SID.
+            var sHash = SHA1.Create();
+            var encoding = new ASCIIEncoding();
+            var userBytes = encoding.GetBytes(user.SystemUserKey);
+            var userHash = sHash.ComputeHash(userBytes);
+            var userHashString = Convert.ToBase64String(userHash);
+            
+            //The / is the only illegal character for SharePoint in a Base64 string
+            //Replacing it with $, which is not valid in a Base64 string, but works for our purposes
 
-                try
+            userHashString = userHashString.Replace("/", "$");
+
+            var fileName = string.Format("{0}{1}", userHashString, ".jpg");
+
+            try
+            {
+                using (SPSite site = new SPSite(siteUri))
                 {
-                    using (var response = (HttpWebResponse) request.GetResponse())
+                    using (SPWeb web = site.RootWeb)
                     {
-                        if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NotModified)
+                        var list = web.GetList("UserPhotos");
+                        var folder = list.RootFolder;
+                        var file = folder.Files[fileName];
+
+                        if (file.Length > 1)
                         {
-                            if (response.GetResponseStream() != null)
+                            var pictureExpiryDays = 1;
+
+                            if (farm.Properties.ContainsKey("pictureExpiryDays"))
                             {
-                                var image = new Bitmap(response.GetResponseStream());
-                                fileUri = SaveImage(user, image, siteUri);
+                                pictureExpiryDays = (int) farm.Properties["pictureExpiryDays"];
+                            }
+
+                            if ((file.TimeLastModified - DateTime.Now).TotalDays < pictureExpiryDays)
+                            {
+                                return (string)file.Item[SPBuiltInFieldId.EncodedAbsUrl];
                             }
                         }
-                        //else Exchange is not online, incorrect URL, etc.
                     }
                 }
-                catch (Exception)
+            }
+            catch (Exception)
+            {
+                //File not found, etc. Discard exception and continue.
+            }
+
+            if ((string) farm.Properties["useExchange"] == "True")
+            {
+                var ewsPictureSize = "648x648";
+
+                if (farm.Properties.ContainsKey("ewsPictureSize"))
                 {
-                    //add ULS logging
-                    return null;
+                    ewsPictureSize = (string)farm.Properties["ewsPictureSize"];
                 }
+
+                var uri = new UriBuilder(string.Format("{0}/s/GetUserPhoto?email={1}&size=HR{2}", farm.Properties["ewsUrl"], user.Email, ewsPictureSize));
+
+                SPSecurity.RunWithElevatedPrivileges(delegate
+                {
+                    var request = (HttpWebRequest)WebRequest.Create(uri.Uri);
+                    request.UseDefaultCredentials = true;
+
+                    try
+                    {
+                        using (var response = (HttpWebResponse)request.GetResponse())
+                        {
+                            if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NotModified)
+                            {
+                                if (response.GetResponseStream() != null)
+                                {
+                                    var image = new Bitmap(response.GetResponseStream());
+                                    fileUri = SaveImage(user, image, siteUri, fileName);
+                                }
+                            }
+                            else if (response.StatusCode == HttpStatusCode.NotFound ||
+                                        response.StatusCode == HttpStatusCode.InternalServerError ||
+                                        response.StatusCode == HttpStatusCode.ServiceUnavailable)
+                            {
+                                fileUri = string.Empty;
+                            }
+                            //else Exchange is not online, incorrect URL, etc.
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        FoudationSync.LogMessage(601, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                            exception.Message + exception.StackTrace, null);
+                    }
+
+                });
             }
             else
             {
@@ -397,7 +473,7 @@ namespace Nauplius.SP.UserSync
                     using (var ms = new MemoryStream(byteArray))
                     {
                         var image = new Bitmap(ms);
-                        fileUri = SaveImage(user, image, siteUri);
+                        fileUri = SaveImage(user, image, siteUri, fileName);
                     }
                 }
             }
@@ -405,7 +481,7 @@ namespace Nauplius.SP.UserSync
             return !string.IsNullOrEmpty(fileUri) ? fileUri : null;
         }
 
-        private static string SaveImage(SPUser user, Bitmap image, string siteUri)
+        private static string SaveImage(SPUser user, Bitmap image, string siteUri, string fileName)
         {
             try
             {
@@ -413,8 +489,8 @@ namespace Nauplius.SP.UserSync
                 {
                     using (SPWeb web = site.RootWeb)
                     {
-                        var library = web.Folders["UserPhotos"];
-                        var fileName = user.LoginName + ".jpg";
+                        var library = web.Lists["UserPhotos"];
+
 
                         var byteArray = new byte[0];
 
@@ -428,18 +504,17 @@ namespace Nauplius.SP.UserSync
 
                         if (byteArray.Length > 0)
                         {
-                            var file = library.Files.Add(fileName, byteArray);
-                            library.Update();
+                            var file = library.RootFolder.Files.Add(fileName, byteArray, true);
 
                             return (string) file.Item[SPBuiltInFieldId.EncodedAbsUrl];
                         }
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                //add ULS logging
-                return null;
+                FoudationSync.LogMessage(701, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                    exception.Message + exception.StackTrace, null);
             }
 
             return null;

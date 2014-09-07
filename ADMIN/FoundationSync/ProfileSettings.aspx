@@ -36,7 +36,7 @@
             <td>
                 <wssuc:InputFormSection ID="InputFormSection1" runat="server"
                     Title="Picture Site Collection URL"
-                    Description="Enter the Site Collection URL to store pictures. This Site Collection should allow Everyone read access and the Farm Administrator with Contribute rights.">
+                    Description="Enter the Site Collection URL to store pictures. This Site Collection should allow Everyone read access to a Picture Library named 'UserPhotos' and the Farm Administrator with Contribute rights.">
                         <template_inputformcontrols>
                             <wssuc:InputFormControl runat="server" LabelText="Site Collection:" ExampleText="https://pictures.example.com/sites/users" 
                                 LabelAssociatedControlId="tBox1">

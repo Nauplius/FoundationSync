@@ -88,29 +88,25 @@
     <None Include="Features\FoundationSync\FoundationSync.feature">
       <FeatureId>{3b0183fd-7888-4d91-9f19-cb96777f6aef}</FeatureId>
     </None>
-    <None Include="Images\SharePointProjectItem.spdata">
-      <SharePointProjectItemId>{0f9ca893-a051-403f-abc4-d6659d2dc58c}</SharePointProjectItemId>
-    </None>
     <None Include="key.snk" />
-    <None Include="Layouts\SharePointProjectItem.spdata">
-      <SharePointProjectItemId>{aa209b52-8888-40f5-b695-cdc91b1dd1d2}</SharePointProjectItemId>
-    </None>
     <None Include="Package\Package.package">
       <PackageId>{1edb5daf-566f-4239-9a65-4dfc51d0fcaa}</PackageId>
     </None>
     <None Include="Package\Package.Template.xml">
       <DependentUpon>Package.package</DependentUpon>
     </None>
+    <None Include="SyncLink\SharePointProjectItem.spdata">
+      <SharePointProjectItemId>{7bcf82fa-7549-4dc1-ba45-a1f1373cda9b}</SharePointProjectItemId>
+    </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Layouts\Nauplius.SharePoint.FoundationSync\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="Features\FoundationSync\FoundationSync.Template.xml">
       <DependentUpon>FoundationSync.feature</DependentUpon>
     </Content>
-    <Content Include="Images\Nauplius.SharePoint.FoundationSync\image32x32.png" />
+    <Content Include="ADMIN\FoundationSync\icon_32x32.png" />
     <Content Include="ADMIN\FoundationSync\ProfileSettings.aspx" />
+    <Content Include="SyncLink\Elements.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
