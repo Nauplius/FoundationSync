@@ -416,7 +416,8 @@ namespace Nauplius.SP.UserSync
             }
             catch (Exception)
             {
-                //File not found, etc. Discard exception and continue.
+                FoudationSync.LogMessage(2001, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
+                    string.Format("Error retriving file, continuing to pull new file."), null);
             }
 
             if ((string) farm.Properties["useExchange"] == "True")

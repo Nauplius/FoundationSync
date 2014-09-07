@@ -15,12 +15,11 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
 
         protected void btnSave_OnClick(object sender, EventArgs e)
         {
-            bool site, exchange = false;
             var farm = SPFarm.Local;
 
             if (!string.IsNullOrEmpty(tBox1.Text))
             {
-                site = ValidateSiteCollection();
+                ValidateSiteCollection();
             }
             else
             {
@@ -32,7 +31,7 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
 
             if (!string.IsNullOrEmpty(tBox2.Text))
             {
-                exchange = ValidateExchangeConnection();
+                ValidateExchangeConnection();
             }
             else
             {
@@ -48,9 +47,13 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             }
         }
 
-        internal bool ValidateSiteCollection()
+        internal void ValidateSiteCollection()
         {
-            if (!Uri.IsWellFormedUriString(tBox1.Text, UriKind.Absolute)) return false;
+            if (!Uri.IsWellFormedUriString(tBox1.Text, UriKind.Absolute))
+            {
+                v2.Visible = true;
+                return;
+            }
 
             var uri = new UriBuilder(tBox1.Text + "/_api/lists/getbytitle('UserPhotos')");
             var request = (HttpWebRequest)WebRequest.Create(uri.Uri);
@@ -58,7 +61,6 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
 
             try
             {
-                var response = (HttpWebResponse)request.GetResponse();
                 var farm = SPFarm.Local;
                 var url = tBox1.Text + "/UserPhotos";
 
@@ -72,19 +74,21 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
                 }
 
                 farm.Update(true);
-                return response.StatusCode == HttpStatusCode.OK;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                //not a valid location or access denied; add ULS logging
+                FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                    string.Format("Unable to set pictureStorageUrl with error {0}.", ex.InnerException), null);
             }
-
-            return false;
         }
 
-        internal bool ValidateExchangeConnection()
+        internal void ValidateExchangeConnection()
         {
-            if (!Uri.IsWellFormedUriString(tBox2.Text, UriKind.Absolute)) return false;
+            if (!Uri.IsWellFormedUriString(tBox2.Text, UriKind.Absolute))
+            {
+                v3.Visible = true;
+                return;
+            }
 
             var uri = new UriBuilder(tBox2.Text);
             var request = (HttpWebRequest)WebRequest.Create(uri.Uri);
@@ -94,7 +98,6 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             {
                 try
                 {
-                    var response = (HttpWebResponse)request.GetResponse();
                     var farm = SPFarm.Local;
 
                     if (farm.Properties.ContainsKey("useExchange"))
@@ -117,13 +120,12 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
 
                     farm.Update(true);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    //Log to ULS, unable to add property values
+                    FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                        string.Format("Unable to set useExchange or ewsUrl values with error {0}.", ex.InnerException), null);
                 }                
             });
-
-            return false;
         }
 
         internal void LoadSettings()
@@ -147,26 +149,30 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             }
             catch (Exception)
             {
-                //add to ULS logs, log message as unable to get property useExchange/ewsUrl.
+                FoudationSync.LogMessage(1001, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                    string.Format("Unable to retrieve useExchange or ewsUrl when loading settings. " +
+                                  "Try setting them manually on the SPFarm object."), null);
             }
 
             try
             {
-                if (farm.Properties.ContainsKey("pictureStorageUrl") && !string.IsNullOrEmpty(farm.Properties["pictureStorageUrl"].ToString()))
-                {
-                    //validate URI
+                if (!farm.Properties.ContainsKey("pictureStorageUrl") ||
+                    string.IsNullOrEmpty(farm.Properties["pictureStorageUrl"].ToString())) return;
+                
 
-                    var url = farm.Properties["pictureStorageUrl"].ToString();
-                    var index = url.LastIndexOf("/");
 
-                    if (index > 0)
-                        url = url.Substring(0, index);
-                    tBox1.Text = url;
-                }
+                var url = farm.Properties["pictureStorageUrl"].ToString();
+                var index = url.LastIndexOf("/", StringComparison.Ordinal);
+
+                if (index > 0)
+                    url = url.Substring(0, index);
+                tBox1.Text = url;
             }
             catch (Exception)
             {
-                //add to ULS logs, log message as unable to get property pictureStorageUrl
+                FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                    string.Format("Unable to retrieve pictureStorageUrl when loading settings. " +
+                                  "Try setting it manually on the SPFarm object."), null);
             }
         }
     }

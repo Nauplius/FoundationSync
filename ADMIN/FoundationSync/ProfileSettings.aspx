@@ -44,7 +44,9 @@
                                     <div class="ms-authoringcontrols">
                                         <SharePoint:InputFormTextBox runat="server" ID="tBox1" MaxLength="1024" TextMode="SingleLine" Width="60%"/>
                                         <SharePoint:InputFormRequiredFieldValidator runat="server" ID="v1" ErrorMessage="Site Collection Required." 
-									        SetFocusOnError="true" ControlToValidate="tBox1" />      
+									        SetFocusOnError="true" ControlToValidate="tBox1" />  
+                                        <SharePoint:InputFormRequiredFieldValidator runat="server" ID="v2" ErrorMessage="Please enter a valid URL."
+                                            SetFocusOnError="true" ControlToValidate="tBox1" />    
                                     </div>
                                 </Template_Control>
                             </wssuc:InputFormControl>
@@ -61,6 +63,8 @@
                                 <Template_Control>
                                     <div class="ms-authoringcontrols">
                                         <SharePoint:InputFormTextBox runat="server" ID="tBox2" MaxLength="1024" TextMode="SingleLine" Width="60%"/> 
+                                        <SharePoint:InputFormRequiredFieldValidator runat="server" ID="v3" ErrorMessage="Please enter a valid URL."
+                                            SetFocusOnError="true" ControlToValidate="tBox2" />  
                                     </div>
                                 </Template_Control>
                             </wssuc:InputFormControl>

@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Elements xmlns="http://schemas.microsoft.com/sharepoint/">
+  <ListInstance Title="UserPhotos" 
+                OnQuickLaunch="FALSE" 
+                TemplateType="109" 
+                FeatureId="00bfea71-52d4-45b3-b544-b1c71b620109" 
+                Url="Lists/UserPhotos" 
+                Description="This library holds User Photos pulled from Active Directory and/or Exchange 2013."
+                VersioningEnabled="FALSE" 
+                >  
+  </ListInstance>
+</Elements>

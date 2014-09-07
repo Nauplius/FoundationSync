@@ -80,10 +80,17 @@
     <Compile Include="Logging.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Push.cs" />
+    <Compile Include="SiteProvisioning.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ADMIN\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{d658803c-1f66-4ac0-8f2a-5a7574a7148b}</SharePointProjectItemId>
+    </None>
+    <None Include="Features\SiteProvisioning\SiteProvisioning.feature">
+      <FeatureId>{f9675f4a-a21c-4811-89bf-1fd205a9849a}</FeatureId>
+    </None>
+    <None Include="Features\UserPhotosFeature\UserPhotosFeature.feature">
+      <FeatureId>{afd1ff8d-c062-43be-8887-db640198ce57}</FeatureId>
     </None>
     <None Include="Features\FoundationSync\FoundationSync.feature">
       <FeatureId>{3b0183fd-7888-4d91-9f19-cb96777f6aef}</FeatureId>
@@ -98,15 +105,32 @@
     <None Include="SyncLink\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{7bcf82fa-7549-4dc1-ba45-a1f1373cda9b}</SharePointProjectItemId>
     </None>
+    <None Include="UserPhotos\SharePointProjectItem.spdata">
+      <SharePointProjectItemId>{3e739432-9815-450e-bf35-ed1622d82b3b}</SharePointProjectItemId>
+    </None>
+    <None Include="UserPictureHost\SharePointProjectItem.spdata">
+      <SharePointProjectItemId>{3b5cab6a-1ec1-4886-940c-819a3b9df10d}</SharePointProjectItemId>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="Features\SiteProvisioning\SiteProvisioning.Template.xml">
+      <DependentUpon>SiteProvisioning.feature</DependentUpon>
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Features\UserPhotosFeature\UserPhotosFeature.Template.xml">
+      <DependentUpon>UserPhotosFeature.feature</DependentUpon>
+    </Content>
     <Content Include="Features\FoundationSync\FoundationSync.Template.xml">
       <DependentUpon>FoundationSync.feature</DependentUpon>
     </Content>
     <Content Include="ADMIN\FoundationSync\icon_32x32.png" />
     <Content Include="ADMIN\FoundationSync\ProfileSettings.aspx" />
     <Content Include="SyncLink\Elements.xml" />
+    <Content Include="UserPhotos\Elements.xml" />
+    <Content Include="UserPictureHost\default.aspx" />
+    <Content Include="UserPictureHost\onet.xml" />
+    <Content Include="UserPictureHost\webtemp_UserPictureHost.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
