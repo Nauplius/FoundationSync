@@ -391,25 +391,23 @@ namespace Nauplius.SP.UserSync
             {
                 using (SPSite site = new SPSite(siteUri))
                 {
-                    using (SPWeb web = site.RootWeb)
+                    var web = site.RootWeb;
+                    var list = web.GetList("UserPhotos");
+                    var folder = list.RootFolder;
+                    var file = folder.Files[fileName];
+
+                    if (file.Length > 1)
                     {
-                        var list = web.GetList("UserPhotos");
-                        var folder = list.RootFolder;
-                        var file = folder.Files[fileName];
+                        var pictureExpiryDays = 1;
 
-                        if (file.Length > 1)
+                        if (farm.Properties.ContainsKey("pictureExpiryDays"))
                         {
-                            var pictureExpiryDays = 1;
+                            pictureExpiryDays = (int) farm.Properties["pictureExpiryDays"];
+                        }
 
-                            if (farm.Properties.ContainsKey("pictureExpiryDays"))
-                            {
-                                pictureExpiryDays = (int) farm.Properties["pictureExpiryDays"];
-                            }
-
-                            if ((file.TimeLastModified - DateTime.Now).TotalDays < pictureExpiryDays)
-                            {
-                                return (string)file.Item[SPBuiltInFieldId.EncodedAbsUrl];
-                            }
+                        if ((file.TimeLastModified - DateTime.Now).TotalDays < pictureExpiryDays)
+                        {
+                            return (string)file.Item[SPBuiltInFieldId.EncodedAbsUrl];
                         }
                     }
                 }

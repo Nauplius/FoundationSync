@@ -1,7 +1,0 @@
-﻿<Feature xmlns="http://schemas.microsoft.com/sharepoint/" 
-         Title="FoundationSync SiteProvisioning" 
-         Description="Custom site provisioning code for the UserPhotosHost." 
-         Id="c375609a-5e9b-467f-bca0-b53b35ada154" 
-         Scope="Web"
-         Hidden="TRUE"
-         ></Feature>
