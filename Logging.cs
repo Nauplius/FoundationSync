@@ -48,7 +48,7 @@ namespace Nauplius.SP.UserSync
             {
                 new SPDiagnosticsArea(NaupliusDiagnosticArea, 0, 0, false, new List<SPDiagnosticsCategory>
                     {
-                        new SPDiagnosticsCategory(LogCategories.FoundationSync, null, TraceSeverity.Unexpected, EventSeverity.Error, 0, 0, false, true),
+                        new SPDiagnosticsCategory(LogCategories.FoundationSync, null, TraceSeverity.Medium, EventSeverity.Information, 0, 0, false, true),
                     })
             };
             return areas;

@@ -404,9 +404,9 @@ namespace Nauplius.SP.UserSync
                         {
                             try
                             {
-                                if ((int) farm.Properties["pictureExpiryDays"] < 1)
+                                if ((int) farm.Properties["pictureExpiryDays"] < -1)
                                 {
-                                    pictureExpiryDays = 0;
+                                    pictureExpiryDays = -1; //Picture will always be updated
                                 }
                                 else
                                 {
