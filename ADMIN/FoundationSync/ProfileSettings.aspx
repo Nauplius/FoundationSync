@@ -62,9 +62,7 @@
                                 LabelAssociatedControlId="tBox2">
                                 <Template_Control>
                                     <div class="ms-authoringcontrols">
-                                        <SharePoint:InputFormTextBox runat="server" ID="tBox2" MaxLength="1024" TextMode="SingleLine" Width="60%"/> 
-                                        <SharePoint:InputFormRequiredFieldValidator runat="server" ID="v3" ErrorMessage="Please enter a valid URL."
-                                            SetFocusOnError="true" ControlToValidate="tBox2" />  
+                                        <SharePoint:InputFormTextBox runat="server" ID="tBox2" MaxLength="1024" TextMode="SingleLine" Width="60%"/>
                                     </div>
                                 </Template_Control>
                             </wssuc:InputFormControl>

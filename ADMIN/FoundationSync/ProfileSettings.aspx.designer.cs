@@ -85,15 +85,6 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync {
         protected global::Microsoft.SharePoint.WebControls.InputFormTextBox tBox2;
         
         /// <summary>
-        /// v3 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::Microsoft.SharePoint.WebControls.InputFormRequiredFieldValidator v3;
-        
-        /// <summary>
         /// btnSaveBottom control.
         /// </summary>
         /// <remarks>

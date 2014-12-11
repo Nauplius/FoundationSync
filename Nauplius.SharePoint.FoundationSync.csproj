@@ -94,6 +94,9 @@
     <None Include="Features\FoundationSync\FoundationSync.feature">
       <FeatureId>{3b0183fd-7888-4d91-9f19-cb96777f6aef}</FeatureId>
     </None>
+    <None Include="Images\SharePointProjectItem.spdata">
+      <SharePointProjectItemId>{31f7d3ac-0d00-4980-9d74-a54decb99b1f}</SharePointProjectItemId>
+    </None>
     <None Include="key.snk" />
     <None Include="Package\Package.package">
       <PackageId>{1edb5daf-566f-4239-9a65-4dfc51d0fcaa}</PackageId>
@@ -115,6 +118,7 @@
     </Content>
     <Content Include="ADMIN\FoundationSync\icon_32x32.png" />
     <Content Include="ADMIN\FoundationSync\ProfileSettings.aspx" />
+    <Content Include="Images\FoundationSync\icon_32x32.png" />
     <Content Include="SyncLink\Elements.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

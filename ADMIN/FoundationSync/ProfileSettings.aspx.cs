@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Net;
+using System.Web.UI.WebControls;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
+using Microsoft.SharePoint.Utilities;
 using Microsoft.SharePoint.WebControls;
 
 namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
@@ -10,7 +12,10 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            LoadSettings();
+            if (!IsPostBack)
+            {
+                LoadSettings();   
+            }
         }
 
         protected void btnSave_OnClick(object sender, EventArgs e)
@@ -45,6 +50,11 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
                     farm.Properties.Remove("ewsUrl");
                 }
             }
+
+            if (Page.IsValid)
+            {
+                SPUtility.Redirect("/applications.aspx", SPRedirectFlags.Default, Context);
+            }
         }
 
         internal void ValidateSiteCollection()
@@ -52,12 +62,9 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             if (!Uri.IsWellFormedUriString(tBox1.Text, UriKind.Absolute))
             {
                 v2.Visible = true;
+                v2.IsValid = false;
                 return;
             }
-
-            var uri = new UriBuilder(tBox1.Text + "/_api/lists/getbytitle('UserPhotos')");
-            var request = (HttpWebRequest)WebRequest.Create(uri.Uri);
-            request.Credentials = CredentialCache.DefaultNetworkCredentials;
 
             try
             {
@@ -84,15 +91,7 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
 
         internal void ValidateExchangeConnection()
         {
-            if (!Uri.IsWellFormedUriString(tBox2.Text, UriKind.Absolute))
-            {
-                v3.Visible = true;
-                return;
-            }
-
             var uri = new UriBuilder(tBox2.Text);
-            var request = (HttpWebRequest)WebRequest.Create(uri.Uri);
-            request.UseDefaultCredentials = true;
 
             SPSecurity.RunWithElevatedPrivileges(delegate
             {

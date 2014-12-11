@@ -148,7 +148,7 @@ namespace Nauplius.SP.UserSync
                             }
                             catch (IdentityNotMappedException exception)
                             {
-                                FoudationSync.LogMessage(503, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                                FoudationSync.LogMessage(503, FoudationSync.LogCategories.FoundationSync, TraceSeverity.High,
                                     exception.Message + exception.StackTrace, null);
                                 break;
                             }
@@ -402,7 +402,30 @@ namespace Nauplius.SP.UserSync
 
                         if (farm.Properties.ContainsKey("pictureExpiryDays"))
                         {
-                            pictureExpiryDays = (int) farm.Properties["pictureExpiryDays"];
+                            try
+                            {
+                                if ((int) farm.Properties["pictureExpiryDays"] < 1)
+                                {
+                                    pictureExpiryDays = 0;
+                                }
+                                else
+                                {
+                                    pictureExpiryDays = (int) farm.Properties["pictureExpiryDays"];
+                                }
+
+                            }
+                            catch (InvalidCastException)
+                            {
+                                //Resetting invalid value to 1 day
+                                farm.Properties["pictureExpiryDays"] = "1";
+                                farm.Update(true);
+                            }
+                            catch (OverflowException)
+                            {
+                                //Resetting invalid value to 1 day
+                                farm.Properties["pictureExpiryDays"] = "1";     
+                                farm.Update(true);
+                            }
                         }
 
                         if ((file.TimeLastModified - DateTime.Now).TotalDays < pictureExpiryDays)
@@ -457,7 +480,7 @@ namespace Nauplius.SP.UserSync
                     }
                     catch (Exception exception)
                     {
-                        FoudationSync.LogMessage(601, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                        FoudationSync.LogMessage(601, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Medium,
                             exception.Message + exception.StackTrace, null);
                     }
 
@@ -489,17 +512,13 @@ namespace Nauplius.SP.UserSync
                     using (SPWeb web = site.RootWeb)
                     {
                         var library = web.Lists["UserPhotos"];
-
-
                         var byteArray = new byte[0];
+                        var ms = new MemoryStream();
 
-                        using (var ms = new MemoryStream())
-                        {
-                            image.Save(ms, ImageFormat.Jpeg);
-                            ms.Close();
+                        image.Save(ms, ImageFormat.Jpeg);
+                        ms.Close();
 
-                            byteArray = ms.ToArray();
-                        }
+                        byteArray = ms.ToArray();
 
                         if (byteArray.Length > 0)
                         {
