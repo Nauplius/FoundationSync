@@ -40,47 +40,55 @@ namespace Nauplius.SP.UserSync
 
         public override void Execute(Guid targetInstanceId)
         {
-            var farm = SPFarm.Local;
-            var invalidUids = new List<string> { @"NT AUTHORITY\", @"SHAREPOINT\", "c:0(.s|true" };
-            var service = farm.Services.GetValue<SPWebService>();
-            var userAccounts = new HashSet<SPUser>();
-            var groupAccounts = new HashSet<SPUser>();
-
-            foreach (SPWebApplication webApplication in service.WebApplications)
+            try
             {
-                foreach (SPSite site in webApplication.Sites)
+                var farm = SPFarm.Local;
+                var invalidUids = new List<string> { @"NT AUTHORITY\", @"SHAREPOINT\", "c:0(.s|true" };
+                var service = farm.Services.GetValue<SPWebService>();
+                var userAccounts = new HashSet<SPUser>();
+                var groupAccounts = new HashSet<SPUser>();
+
+                foreach (SPWebApplication webApplication in service.WebApplications)
                 {
-                    foreach (SPUser userPrincipal in from SPUser userPrincipal in site.RootWeb.SiteUsers
-                                                     let invalidUser = invalidUids.Any(word => userPrincipal.LoginName.Contains(word))
-                                                     where !invalidUser
-                                                     where !userPrincipal.IsDomainGroup
-                                                     where userPrincipal.LoginName.Contains(@"\")
-                                                     select userPrincipal)
+                    foreach (SPSite site in webApplication.Sites)
                     {
-                        userAccounts.Add(userPrincipal);
+                        foreach (SPUser userPrincipal in from SPUser userPrincipal in site.RootWeb.SiteUsers
+                                                         let invalidUser = invalidUids.Any(word => userPrincipal.LoginName.Contains(word))
+                                                         where !invalidUser
+                                                         where !userPrincipal.IsDomainGroup
+                                                         where userPrincipal.LoginName.Contains(@"\")
+                                                         select userPrincipal)
+                        {
+                            userAccounts.Add(userPrincipal);
+                        }
+
+                        FoudationSync.LogMessage(100, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
+                            string.Format("{0} user principals in site {1}", userAccounts.Count, site.Url), null);
+                        GetDomains(userAccounts, webApplication, site, false);
+                        userAccounts.Clear();
+
+                        foreach (SPUser groupPrincipal in from SPUser groupPrincipal in site.RootWeb.SiteUsers
+                                                          let invalidGroup = invalidUids.Any(word => groupPrincipal.LoginName.Contains(word))
+                                                          where !invalidGroup
+                                                          where groupPrincipal.IsDomainGroup
+                                                          select groupPrincipal)
+                        {
+                            groupAccounts.Add(groupPrincipal);
+                        }
+
+                        FoudationSync.LogMessage(101, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
+                            string.Format("{0} group principals in site {1}", groupAccounts.Count, site.Url), null);
+                        GetDomains(groupAccounts, webApplication, site, true);
+                        groupAccounts.Clear();
+
+                        site.Dispose();
                     }
-
-                    FoudationSync.LogMessage(100, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
-                        string.Format("{0} user principals in site {1}", userAccounts.Count, site.Url), null);
-                    GetDomains(userAccounts, webApplication, site, false);
-                    userAccounts.Clear();
-
-                    foreach (SPUser groupPrincipal in from SPUser groupPrincipal in site.RootWeb.SiteUsers
-                                                      let invalidGroup = invalidUids.Any(word => groupPrincipal.LoginName.Contains(word))
-                                                      where !invalidGroup
-                                                      where groupPrincipal.IsDomainGroup
-                                                      select groupPrincipal)
-                    {
-                        groupAccounts.Add(groupPrincipal);
-                    }
-
-                    FoudationSync.LogMessage(101, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
-                        string.Format("{0} group principals in site {1}", groupAccounts.Count, site.Url), null);
-                    GetDomains(groupAccounts, webApplication, site, true);
-                    groupAccounts.Clear();
-
-                    site.Dispose();
                 }
+            }
+            catch (IndexOutOfRangeException ex)
+            {
+                FoudationSync.LogMessage(102, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Medium,
+                   string.Format("Index was out of range."), null);               
             }
         }
 
