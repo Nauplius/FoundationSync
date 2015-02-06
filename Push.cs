@@ -21,6 +21,7 @@ namespace Nauplius.SP.UserSync
     public class AttributePush : SPJobDefinition
     {
         private const string tJobName = "Nauplius.SharePoint.FoundationSync";
+        private static readonly Guid pGuid = new Guid("5032BAD9-AC8B-4E2E-85CD-A1DBEFEE19B0");
 
         public AttributePush()
             : base()
@@ -28,7 +29,7 @@ namespace Nauplius.SP.UserSync
         }
 
         public AttributePush(String name, SPService service, SPServer server, SPJobLockType lockType)
-            : base(name, service, server, lockType)
+            : base(name, service, server, SPJobLockType.Job)
         {
         }
 
@@ -40,20 +41,26 @@ namespace Nauplius.SP.UserSync
 
         public override void Execute(Guid targetInstanceId)
         {
+            var settingsStorage = new FoundationSyncStorage();
+
             try
             {
                 var farm = SPFarm.Local;
-                var invalidUids = new List<string> { @"NT AUTHORITY\", @"SHAREPOINT\", "c:0(.s|true" };
+                var ignoredUsers = settingsStorage.SyncSettings().IgnoredUsers;
                 var service = farm.Services.GetValue<SPWebService>();
                 var userAccounts = new HashSet<SPUser>();
                 var groupAccounts = new HashSet<SPUser>();
 
-                foreach (SPWebApplication webApplication in service.WebApplications)
+                var webApplications = settingsStorage.SyncSettings().WebApplicationCollection ?? service.WebApplications;
+
+                foreach (SPWebApplication webApplication in webApplications)
                 {
-                    foreach (SPSite site in webApplication.Sites)
+                    var siteCollections = settingsStorage.SyncSettings().SPSiteCollection ?? webApplication.Sites;
+
+                    foreach (SPSite site in siteCollections)
                     {
                         foreach (SPUser userPrincipal in from SPUser userPrincipal in site.RootWeb.SiteUsers
-                                                         let invalidUser = invalidUids.Any(word => userPrincipal.LoginName.Contains(word))
+                                                         let invalidUser = ignoredUsers.Any(word => userPrincipal.LoginName.Contains(word))
                                                          where !invalidUser
                                                          where !userPrincipal.IsDomainGroup
                                                          where userPrincipal.LoginName.Contains(@"\")
@@ -68,7 +75,7 @@ namespace Nauplius.SP.UserSync
                         userAccounts.Clear();
 
                         foreach (SPUser groupPrincipal in from SPUser groupPrincipal in site.RootWeb.SiteUsers
-                                                          let invalidGroup = invalidUids.Any(word => groupPrincipal.LoginName.Contains(word))
+                                                          let invalidGroup = ignoredUsers.Any(word => groupPrincipal.LoginName.Contains(word))
                                                           where !invalidGroup
                                                           where groupPrincipal.IsDomainGroup
                                                           select groupPrincipal)
@@ -183,7 +190,20 @@ namespace Nauplius.SP.UserSync
                         {
                             var result = searcher.FindOne();
 
-                            if (result == null) continue;
+                            const bool userActive = true;
+
+                            if (result == null)
+                            {
+                                RemoveUsers(objPrincipal, site, false);
+                                continue;
+                            }
+                            
+                            if (userActive != IsActive(result.GetDirectoryEntry()))
+                            {
+                                RemoveUsers(objPrincipal, site, false);
+                                continue;                                
+                            }
+
                             var directoryEntry = result.GetDirectoryEntry();
                             UpdateUilGroup(objPrincipal, directoryEntry, listItems, itemCount);
                         }
@@ -544,6 +564,30 @@ namespace Nauplius.SP.UserSync
             }
 
             return null;
+        }
+
+        private static bool IsActive(DirectoryEntry de)
+        {
+            if (de.NativeGuid == null) return false;
+
+            var flags = (int)de.Properties["userAccountControl"].Value;
+
+            return !Convert.ToBoolean(flags & 0x0002);
+        }
+
+        private static void RemoveUsers(SPUser objPrincipal, SPSite site, bool userActive)
+        {
+            var farm = SPFarm.Local;
+
+            if (farm == null) return;
+
+            var syncSettings = (FoundationSyncSettings)farm.GetObject(pGuid);
+
+            if (syncSettings == null) return;
+            if (syncSettings.DeleteUsers || (syncSettings.DeleteDisabledUsers && userActive == false))
+            {
+                site.RootWeb.Users.RemoveByID(objPrincipal.ID);
+            }
         }
     }
 }
