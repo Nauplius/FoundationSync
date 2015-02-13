@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
 
@@ -8,10 +10,13 @@ namespace Nauplius.SP.UserSync
 {
     class LoggingEx
     {
-        private MemoryStream _memoryStream = new MemoryStream();
-
+        private MemoryStream _usersFoundMemoryStream = new MemoryStream();
+        private MemoryStream _usersUpdatedMemoryStream = new MemoryStream();
+        private MemoryStream _usersDeletedMemoryStream = new MemoryStream();
+        private MemoryStream _userPropertiesMemoryStream = new MemoryStream();
         private const string reportLibrary = "SyncReportLibrary";
-        private void CreateReportStorage()
+
+        internal void CreateReportStorage()
         {
             var settingsStorage = new FoundationSyncStorage();
 
@@ -32,7 +37,7 @@ namespace Nauplius.SP.UserSync
                     var documentTemplate = (from SPDocTemplate dt in web.DocTemplates
                         where dt.Type == 100
                         select dt).FirstOrDefault();
-                    var listGuid = web.Lists.Add("FoundationSync Reports",
+                    var listGuid = web.Lists.Add(reportLibrary,
                         "Reporting on FoundationSync activity.", listTemplates,
                         documentTemplate);
 
@@ -40,6 +45,7 @@ namespace Nauplius.SP.UserSync
                     library.OnQuickLaunch = true;
                     library.EnableFolderCreation = false;
                     library.Update();
+                    settingsStorage.SyncSettings().LoggingExLibrary = (SPDocumentLibrary) library;
                 }
             }
             catch (Exception e)
@@ -52,27 +58,65 @@ namespace Nauplius.SP.UserSync
 
         internal void BuildReport(string logMessage, LoggingExType logType)
         {
+            var bytes = Encoding.UTF8.GetBytes(logMessage);
+
             switch (logType)
             {
                 case LoggingExType.UsersFoundCount:
-                case LoggingExType.UsersUpdatedCount:
-                case LoggingExType.UsersDeletedCount:
-                case LoggingExType.UserProperties:
+                    _usersFoundMemoryStream.WriteAsync(bytes, 0, bytes.Length);
+                    _usersFoundMemoryStream.FlushAsync();
                     break;
-
+                case LoggingExType.UsersUpdatedCount:
+                    _usersUpdatedMemoryStream.WriteAsync(bytes, 0, bytes.Length);
+                    _usersUpdatedMemoryStream.FlushAsync();
+                    break;
+                case LoggingExType.UsersDeletedCount:
+                    _usersDeletedMemoryStream.WriteAsync(bytes, 0, bytes.Length);
+                    _usersDeletedMemoryStream.FlushAsync();
+                    break;
+                case LoggingExType.UserProperties:
+                    _userPropertiesMemoryStream.WriteAsync(bytes, 0, bytes.Length);
+                    _userPropertiesMemoryStream.FlushAsync();
+                    break;
             }
 
-
-            //MemoryStream object (declare in class)
-            //Total Users Found in Site Collection
-            //Total Users Deleted from Site Collection
-            //Total Users Updated in Site Collection
-            //Properties updated for each user
+            bytes = null;
         }
 
-        internal void SaveReport(MemoryStream report)
+        internal void SaveReport()
         {
-            //Save to reportLibrary
+            FileStream fileStream = null;
+            
+            _usersFoundMemoryStream.CopyTo(fileStream);
+            _usersUpdatedMemoryStream.CopyTo(fileStream);
+            _usersDeletedMemoryStream.CopyTo(fileStream);
+            _usersUpdatedMemoryStream.CopyTo(fileStream);
+            fileStream.Flush();
+
+            const string format = "MMdyyyy-HHmm-FoundationSync.log";
+
+            var fileName = string.Format("{0}", DateTime.Now.ToString(format));
+
+            try
+            {
+                var syncSettings = new FoundationSyncSettings();
+                var library = syncSettings.LoggingExLibrary;
+                
+                using(SPSite site = new SPSite(library.ParentWeb.Site.ID))
+                {
+                    using (SPWeb web = site.OpenWeb(library.ParentWeb.ID))
+                    {
+                        var folder = library.RootFolder;
+                        folder.Files.Add(fileName, fileStream, false);
+                        folder.Update();
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                //ToDo: Log to ULS
+                throw;
+            }
         }
 
         public enum LoggingExType

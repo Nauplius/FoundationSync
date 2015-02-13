@@ -22,6 +22,9 @@ namespace Nauplius.SP.UserSync
     {
         private const string tJobName = "Nauplius.SharePoint.FoundationSync";
         private static readonly Guid pGuid = new Guid("5032BAD9-AC8B-4E2E-85CD-A1DBEFEE19B0");
+        private static int j; //RemoveUsers method
+        private static readonly FoundationSyncStorage settingsStorage = new FoundationSyncStorage();
+        private static readonly LoggingEx loggingEx = new LoggingEx();
 
         public AttributePush()
             : base()
@@ -41,7 +44,7 @@ namespace Nauplius.SP.UserSync
 
         public override void Execute(Guid targetInstanceId)
         {
-            var settingsStorage = new FoundationSyncStorage();
+            loggingEx.CreateReportStorage();
 
             try
             {
@@ -69,6 +72,10 @@ namespace Nauplius.SP.UserSync
                             userAccounts.Add(userPrincipal);
                         }
 
+                        if (settingsStorage.SyncSettings().LoggingEx)
+                            LoggingExData(string.Format("{0} user principals in site {1}", 
+                                userAccounts.Count, site.Url), LoggingEx.LoggingExType.UsersFoundCount);
+
                         FoudationSync.LogMessage(100, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} user principals in site {1}", userAccounts.Count, site.Url), null);
                         GetDomains(userAccounts, webApplication, site, false);
@@ -83,6 +90,10 @@ namespace Nauplius.SP.UserSync
                             groupAccounts.Add(groupPrincipal);
                         }
 
+                        if (settingsStorage.SyncSettings().LoggingEx)
+                            LoggingExData(string.Format("{0} group principals in site {1}",
+                                userAccounts.Count, site.Url), LoggingEx.LoggingExType.UsersFoundCount);
+
                         FoudationSync.LogMessage(101, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} group principals in site {1}", groupAccounts.Count, site.Url), null);
                         GetDomains(groupAccounts, webApplication, site, true);
@@ -91,6 +102,10 @@ namespace Nauplius.SP.UserSync
                         site.Dispose();
                     }
                 }
+
+                if (settingsStorage.SyncSettings().LoggingEx)
+                    LoggingExData(string.Format("{0} user principals deleted",
+                        j), LoggingEx.LoggingExType.UsersDeletedCount);
             }
             catch (IndexOutOfRangeException ex)
             {
@@ -584,10 +599,14 @@ namespace Nauplius.SP.UserSync
             var syncSettings = (FoundationSyncSettings)farm.GetObject(pGuid);
 
             if (syncSettings == null) return;
-            if (syncSettings.DeleteUsers || (syncSettings.DeleteDisabledUsers && userActive == false))
-            {
-                site.RootWeb.Users.RemoveByID(objPrincipal.ID);
-            }
+            if (!syncSettings.DeleteUsers && (!syncSettings.DeleteDisabledUsers || userActive)) return;
+            ++j;
+            site.RootWeb.Users.RemoveByID(objPrincipal.ID);
+        }
+
+        internal static void LoggingExData(string logMessage, LoggingEx.LoggingExType logType)
+        {
+            loggingEx.BuildReport(logMessage, logType);
         }
     }
 }

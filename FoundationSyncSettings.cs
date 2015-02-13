@@ -15,10 +15,12 @@ namespace Nauplius.SP.UserSync
         [Persisted] private bool m_deleteUsers = false;
         [Persisted] private bool m_deleteDisabledUsers = false;
         [Persisted] private bool m_loggingEx = false;
+        [Persisted] private bool m_loggingExVerbose = false;
+        [Persisted] private SPDocumentLibrary m_loggingExLibrary;
         [Persisted] private SPWebApplicationCollection m_webApplicationCollection = null;
         [Persisted] private SPSiteCollection m_spSiteCollection = null;
         [Persisted] private bool m_useExchange = false;
-        [Persisted] private string m_pictureStorageUrl = string.Empty;
+        [Persisted] private Uri m_pictureStorageUrl = null;
         [Persisted] private string m_ewsUrl = string.Empty;
 
         [Persisted] private List<string> m_ignoredUsers = new List<string>()
@@ -58,6 +60,18 @@ namespace Nauplius.SP.UserSync
             set { m_loggingEx = value; }
         }
 
+        public bool LoggingExVerbose
+        {
+            get { return m_loggingExVerbose; }
+            set { m_loggingExVerbose = value; }
+        }
+
+        internal SPDocumentLibrary LoggingExLibrary
+        {
+            get { return m_loggingExLibrary; }
+            set { m_loggingExLibrary = value; }
+        }
+
         public SPWebApplicationCollection WebApplicationCollection
         {
             get { return m_webApplicationCollection; }
@@ -75,7 +89,7 @@ namespace Nauplius.SP.UserSync
             get { return m_useExchange; }
         }
 
-        private string PictureStorageUrl
+        private Uri PictureStorageUrl
         {
             get { return m_pictureStorageUrl; }
         }
