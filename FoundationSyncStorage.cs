@@ -5,23 +5,14 @@ namespace Nauplius.SP.UserSync
 {
     class FoundationSyncStorage
     {
-        private static readonly Guid pGuid = new Guid("5032BAD9-AC8B-4E2E-85CD-A1DBEFEE19B0");
-
         internal FoundationSyncSettings SyncSettings()
         {
+
             try
             {
-                var farm = SPFarm.Local;
+                var foundationSyncSettings = FoundationSyncSettings.Local;
 
-                if (farm != null)
-                {
-                    var settingsStorage = (FoundationSyncSettings)farm.GetObject(pGuid);
-
-                    if (settingsStorage != null)
-                    {
-                        return settingsStorage;
-                    }
-                }
+                if (foundationSyncSettings != null) return foundationSyncSettings;
             }
             catch (Exception e)
             {

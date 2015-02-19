@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.SharePoint.Administration;
 using System.Runtime.InteropServices;
 using Microsoft.SharePoint;
@@ -10,15 +9,16 @@ using Microsoft.SharePoint;
 namespace Nauplius.SP.UserSync
 {
     [Guid("5032BAD9-AC8B-4E2E-85CD-A1DBEFEE19B0")]
-    public class FoundationSyncSettings : SPPersistedObject
+    internal class FoundationSyncSettings : SPPersistedObject
     {
-        [Persisted] private bool m_deleteUsers = false;
-        [Persisted] private bool m_deleteDisabledUsers = false;
-        [Persisted] private bool m_loggingEx = false;
-        [Persisted] private bool m_loggingExVerbose = false;
+        private const string name = "FoundationSyncSettings";
+        [Persisted] private bool m_deleteUsers;
+        [Persisted] private bool m_deleteDisabledUsers;
+        [Persisted] private bool m_loggingEx;
+        [Persisted] private bool m_loggingExVerbose;
         [Persisted] private SPDocumentLibrary m_loggingExLibrary;
-        [Persisted] private SPWebApplicationCollection m_webApplicationCollection = null;
-        [Persisted] private SPSiteCollection m_spSiteCollection = null;
+        [Persisted] private Collection<SPWebApplication> m_webApplicationCollection;
+        [Persisted] private Collection<SPSite> m_spSiteCollection;
         [Persisted] private bool m_useExchange = false;
         [Persisted] private Uri m_pictureStorageUrl = null;
         [Persisted] private string m_ewsUrl = string.Empty;
@@ -31,15 +31,30 @@ namespace Nauplius.SP.UserSync
         };
 
         public FoundationSyncSettings()
-        {
-        }
+        { }
+
+        public FoundationSyncSettings(SPPersistedObject parent) : base(name, parent)
+        { }
 
         public FoundationSyncSettings(string name, SPPersistedObject parent) : base(name, parent)
-        {
-        }
+        { }
 
         public FoundationSyncSettings(string name, SPPersistedObject parent, Guid guid) : base(name, parent, guid)
+        { }
+
+        public static FoundationSyncSettings Local
         {
+            get
+            {
+                var parent = SPFarm.Local;
+                var obj = parent.GetChild<FoundationSyncSettings>(name);
+
+                if (obj != null) return obj;
+                obj = new FoundationSyncSettings(name, parent, new Guid("7A2A3CFF-383F-42E1-A019-384C8B6FA3E3"));
+                obj.Update();
+
+                return obj;
+            }
         }
 
         public bool DeleteUsers
@@ -72,16 +87,33 @@ namespace Nauplius.SP.UserSync
             set { m_loggingExLibrary = value; }
         }
 
-        public SPWebApplicationCollection WebApplicationCollection
+        public Collection<SPWebApplication> WebApplicationCollection
         {
-            get { return m_webApplicationCollection; }
-            set { m_webApplicationCollection = value; }
+            get
+            {
+                var webApplications = m_webApplicationCollection;
+                if (webApplications != null) return m_webApplicationCollection;
+
+                webApplications = new Collection<SPWebApplication>();
+                m_webApplicationCollection = webApplications;
+
+                return m_webApplicationCollection;
+            }
         }
 
-        public SPSiteCollection SPSiteCollection
+        public Collection<SPSite> SPSiteCollection
         {
-            get { return m_spSiteCollection; }
-            set { m_spSiteCollection = value; }
+            get
+            {
+                var siteCollections = m_spSiteCollection;
+                if (siteCollections != null) return m_spSiteCollection;
+
+                siteCollections = new Collection<SPSite>();
+                m_spSiteCollection = siteCollections;
+
+                return m_spSiteCollection;
+
+            }
         }
 
         private bool UseExchange

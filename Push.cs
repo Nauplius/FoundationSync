@@ -54,11 +54,11 @@ namespace Nauplius.SP.UserSync
                 var userAccounts = new HashSet<SPUser>();
                 var groupAccounts = new HashSet<SPUser>();
 
-                var webApplications = settingsStorage.SyncSettings().WebApplicationCollection ?? service.WebApplications;
+                var webApplications = (IEnumerable<SPWebApplication>) settingsStorage.SyncSettings().WebApplicationCollection ?? service.WebApplications;
 
                 foreach (SPWebApplication webApplication in webApplications)
                 {
-                    var siteCollections = settingsStorage.SyncSettings().SPSiteCollection ?? webApplication.Sites;
+                    var siteCollections = (IEnumerable<SPSite>) settingsStorage.SyncSettings().SPSiteCollection ?? webApplication.Sites;
 
                     foreach (SPSite site in siteCollections)
                     {
@@ -327,6 +327,7 @@ namespace Nauplius.SP.UserSync
                     TraceSeverity.Unexpected, exception.Message + " " + exception.StackTrace, null);
             }
         }
+
         private static void UpdateUilUser(SPUser user, DirectoryEntry directoryEntry, SPListItemCollection listItems, int itemCount)
         {
             try
@@ -336,7 +337,7 @@ namespace Nauplius.SP.UserSync
                 {
                     var item = listItems[j];
 
-                    if (item["Name"].ToString().ToLower() != user.LoginName.ToLower()) continue;
+                    if (!String.Equals(item["Name"].ToString(), user.LoginName, StringComparison.CurrentCultureIgnoreCase)) continue;
                     item["Title"] = (directoryEntry.Properties["displayName"].Value == null)
                                         ? string.Empty
                                         : directoryEntry.Properties["displayName"].Value.ToString();
@@ -531,15 +532,22 @@ namespace Nauplius.SP.UserSync
             }
             else
             {
-                var byteArray = (byte[])directoryEntry.Properties["thumbnailPhoto"][0];
-
-                if (byteArray.Length > 0)
+                try
                 {
-                    using (var ms = new MemoryStream(byteArray))
+                    var byteArray = (byte[])directoryEntry.Properties["thumbnailPhoto"][0];
+
+                    if (byteArray.Length > 0)
                     {
-                        var image = new Bitmap(ms);
-                        fileUri = SaveImage(user, image, siteUri, fileName);
+                        using (var ms = new MemoryStream(byteArray))
+                        {
+                            var image = new Bitmap(ms);
+                            fileUri = SaveImage(user, image, siteUri, fileName);
+                        }
                     }
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    return string.Empty;
                 }
             }
 
@@ -555,13 +563,12 @@ namespace Nauplius.SP.UserSync
                     using (SPWeb web = site.RootWeb)
                     {
                         var library = web.Lists["UserPhotos"];
-                        var byteArray = new byte[0];
                         var ms = new MemoryStream();
 
                         image.Save(ms, ImageFormat.Jpeg);
                         ms.Close();
 
-                        byteArray = ms.ToArray();
+                        var byteArray = ms.ToArray();
 
                         if (byteArray.Length > 0)
                         {
