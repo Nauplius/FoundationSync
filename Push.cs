@@ -21,7 +21,6 @@ namespace Nauplius.SP.UserSync
     public class AttributePush : SPJobDefinition
     {
         private const string tJobName = "Nauplius.SharePoint.FoundationSync";
-        private static readonly Guid pGuid = new Guid("5032BAD9-AC8B-4E2E-85CD-A1DBEFEE19B0");
         private static int j; //RemoveUsers method
         private static readonly FoundationSyncStorage settingsStorage = new FoundationSyncStorage();
         private static readonly LoggingEx loggingEx = new LoggingEx();
@@ -54,11 +53,16 @@ namespace Nauplius.SP.UserSync
                 var userAccounts = new HashSet<SPUser>();
                 var groupAccounts = new HashSet<SPUser>();
 
-                var webApplications = (IEnumerable<SPWebApplication>) settingsStorage.SyncSettings().WebApplicationCollection ?? service.WebApplications;
+
+                var webApplications = settingsStorage.SyncSettings().WebApplicationCollection.Count < 1
+                    ? (IEnumerable<SPWebApplication>) service.WebApplications
+                    : settingsStorage.SyncSettings().WebApplicationCollection;
 
                 foreach (SPWebApplication webApplication in webApplications)
                 {
-                    var siteCollections = (IEnumerable<SPSite>) settingsStorage.SyncSettings().SPSiteCollection ?? webApplication.Sites;
+                    var siteCollections = settingsStorage.SyncSettings().SPSiteCollection.Count < 1
+                        ? (IEnumerable<SPSite>) webApplication.Sites
+                        : settingsStorage.SyncSettings().SPSiteCollection;
 
                     foreach (SPSite site in siteCollections)
                     {
@@ -204,22 +208,8 @@ namespace Nauplius.SP.UserSync
                         try
                         {
                             var result = searcher.FindOne();
-
-                            const bool userActive = true;
-
-                            if (result == null)
-                            {
-                                RemoveUsers(objPrincipal, site, false);
-                                continue;
-                            }
-                            
-                            if (userActive != IsActive(result.GetDirectoryEntry()))
-                            {
-                                RemoveUsers(objPrincipal, site, false);
-                                continue;                                
-                            }
-
                             var directoryEntry = result.GetDirectoryEntry();
+
                             UpdateUilGroup(objPrincipal, directoryEntry, listItems, itemCount);
                         }
                         catch (DirectoryServicesCOMException exception)
@@ -259,7 +249,18 @@ namespace Nauplius.SP.UserSync
                         {
                             var result = searcher.FindOne();
 
-                            if (result == null) continue;
+                            if (result == null)
+                            {
+                                RemoveUsers(objPrincipal, site.Url);
+                                continue;
+                            }
+
+                            if (IsActive(result.GetDirectoryEntry()))
+                            {
+                                RemoveUsers(objPrincipal, site.Url);
+                                continue;
+                            }
+
                             var directoryEntry = result.GetDirectoryEntry();
                             UpdateUilUser(objPrincipal, directoryEntry, listItems, itemCount);
                         }
@@ -415,6 +416,8 @@ namespace Nauplius.SP.UserSync
         {
             var farm = SPFarm.Local;
             var siteUri = (string)farm.Properties["pictureStorageUrl"];
+            if (string.IsNullOrEmpty(siteUri)) return null;
+
             var fileUri = string.Empty;
 
             //One-way hash of SystemUserKey, typically a SID.
@@ -467,17 +470,27 @@ namespace Nauplius.SP.UserSync
                             catch (OverflowException)
                             {
                                 //Resetting invalid value to 1 day
-                                farm.Properties["pictureExpiryDays"] = "1";     
+                                farm.Properties["pictureExpiryDays"] = "1";
                                 farm.Update(true);
                             }
                         }
 
                         if ((file.TimeLastModified - DateTime.Now).TotalDays < pictureExpiryDays)
                         {
-                            return (string)file.Item[SPBuiltInFieldId.EncodedAbsUrl];
+                            return (string) file.Item[SPBuiltInFieldId.EncodedAbsUrl];
                         }
                     }
                 }
+            }
+            catch (ArgumentNullException)
+            {
+                return null;
+            }
+            catch (FileNotFoundException)
+            {
+                FoudationSync.LogMessage(1004, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                    string.Format("Invalid Site URL specified for Picture Site Collection URL."), null);
+                return null;
             }
             catch (Exception)
             {
@@ -599,22 +612,34 @@ namespace Nauplius.SP.UserSync
             if (de.NativeGuid == null) return false;
 
             var flags = (int)de.Properties["userAccountControl"].Value;
+            var status = Convert.ToBoolean(flags & 0x0002);
 
-            return !Convert.ToBoolean(flags & 0x0002);
+            return status;
         }
 
-        private static void RemoveUsers(SPUser objPrincipal, SPSite site, bool userActive)
+        private static void RemoveUsers(SPUser objPrincipal, string siteUrl)
         {
-            var farm = SPFarm.Local;
+            if (!settingsStorage.SyncSettings().DeleteUsers && !settingsStorage.SyncSettings().DeleteDisabledUsers)
+                return;
 
-            if (farm == null) return;
+            using (SPSite site = new SPSite(siteUrl))
+            {
+                using (SPWeb web = site.OpenWeb())
+                {
+                    try
+                    {
+                        var user = web.SiteUsers[objPrincipal.LoginName];
+                        if (user.IsSiteAdmin) return;
 
-            var syncSettings = (FoundationSyncSettings)farm.GetObject(pGuid);
-
-            if (syncSettings == null) return;
-            if (!syncSettings.DeleteUsers && (!syncSettings.DeleteDisabledUsers || userActive)) return;
-            ++j;
-            site.RootWeb.Users.RemoveByID(objPrincipal.ID);
+                        web.SiteUsers.Remove(user.LoginName);
+                        ++j;
+                    }
+                    catch (Exception)
+                    {
+                        //ToDo: Error Logging
+                    }
+                }
+            }
         }
 
         internal static void LoggingExData(string logMessage, LoggingEx.LoggingExType logType)

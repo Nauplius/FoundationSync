@@ -97,6 +97,7 @@ namespace Nauplius.SP.UserSync
  *  1002: Unable to retrieve pictureStorageUrl when loading settings. Try setting it manually on the SPFarm object.
  *  1003: Unable to create UserPhotos library. Please create the UserPhotos library manually. {0}
  *  1003: Unable to set permissions on UserPhotos list. Add Authenticated Users with Read rights manually. {0}
+ *  1004: Invalid Site URL specified for Picture Site Collection URL
  * 2000 (Verbose, Failure):
  *  2001: Error retriving file, continuing to pull new file. //ToDo: Fix Spelling
 */
