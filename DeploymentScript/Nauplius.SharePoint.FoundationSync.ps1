@@ -13,62 +13,20 @@ Write-Host -ForegroundColor DarkYellow "Version: 2.5"
 Write-Host -ForegroundColor DarkYellow "Platform: SharePoint 2013"
 Write-Host
 
-if ($Confirm -eq $false)
-	{
-	Write-Host -ForegroundColor White "Press Y to continue with the installation or any other key to exit."
-	Write-Host
+$messageTitle = "Install FoundationSync"
+$message = "Do you want to install FoundationSync for SharePoint 2013?"
+$optYes = [System.Management.Automation.Host.ChoiceDescription] "&Y"
+$optNo = [System.Management.Automation.Host.ChoiceDescription] "&N"
+$opts = [System.Management.Automation.Host.ChoiceDescription[]]($optYes, $optNo)
+$optChoice = $host.ui.PromptForChoice($messageTitle, $message, $opts, 0)
 
-	$char = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-	if ($char.Character -ne "Y")
-	{
-		exit
-	}
-}
-
-Add-PSSnapin Microsoft.SharePoint.PowerShell -ErrorAction Stop
-
-function WaitForSPSolutionJobToComplete([string]$solutionName)
+switch ($optChoice)
 {
-    $solution = Get-SPSolution -Identity $solutionName -EA 0
-
-    if ($solution)
-    {
-	    if ($solution.JobExists)
-	    {
-		    Write-Host -ForegroundColor DarkGray -NoNewLine "`tWaiting for timer job to complete for solution $solutionName."
-	    }
-		
-	    # Check if there is a timer job still associated with this solution and wait until it has finished
-	    while ($solution.JobExists)
-	    {
-		    $jobStatus = $solution.JobStatus
-			
-		    # If the timer job succeeded then proceed
-		    if ($jobStatus -eq [Microsoft.SharePoint.Administration.SPRunningJobStatus]::Succeeded)
-		    {
-			    Write-Host -ForegroundColor DarkGray "Solution $solutionName timer job suceeded"
-			    return $true | Out-Null
-		    }
-			
-		    # If the timer job failed or was aborted then fail
-		    if ($jobStatus -eq [Microsoft.SharePoint.Administration.SPRunningJobStatus]::Aborted -or
-			    $jobStatus -eq [Microsoft.SharePoint.Administration.SPRunningJobStatus]::Failed)
-		    {
-			    Write-Host -ForegroundColor DarkGray "Solution $solutionName has timer job status $jobStatus."
-			    return $false | Out-Null
-		    }
-			
-		    # Otherwise wait for the timer job to finish
-		    Write-Host -ForegroundColor DarkGray -NoNewLine "."
-		    Sleep 1
-	    }
-		
-	    # Write a new line to the end of the '.....'
-	    Write-Host
-    }
-
-return $true | Out-Null
+	0 {Write-Host -ForegroundColor Green "Starting Installation..."}
+	1 {Write-Host -ForegroundColor White "Exiting Installation."; return}
 }
+
+Add-PSSnapin Microsoft.SharePoint.PowerShell -EA Stop
 
 function CheckForExistingSolution([string]$solutionName)
 {
@@ -114,6 +72,49 @@ $solution = Get-SPSolution -Identity $solutionName -EA 0
     }
 }
 
+function WaitForSPSolutionJobToComplete([string]$solutionName)
+{
+    $solution = Get-SPSolution -Identity $solutionName -EA 0
+
+    if ($solution)
+    {
+	    if ($solution.JobExists)
+	    {
+		    Write-Host -ForegroundColor DarkGray -NoNewLine "`tWaiting for timer job to complete for solution $solutionName."
+	    }
+		
+	    # Check if there is a timer job still associated with this solution and wait until it has finished
+	    while ($solution.JobExists)
+	    {
+		    $jobStatus = $solution.JobStatus
+			
+		    # If the timer job succeeded then proceed
+		    if ($jobStatus -eq [Microsoft.SharePoint.Administration.SPRunningJobStatus]::Succeeded)
+		    {
+			    Write-Host -ForegroundColor DarkGray "Solution $solutionName timer job suceeded"
+			    return $true | Out-Null
+		    }
+			
+		    # If the timer job failed or was aborted then fail
+		    if ($jobStatus -eq [Microsoft.SharePoint.Administration.SPRunningJobStatus]::Aborted -or
+			    $jobStatus -eq [Microsoft.SharePoint.Administration.SPRunningJobStatus]::Failed)
+		    {
+			    Write-Host -ForegroundColor DarkGray "Solution $solutionName has timer job status $jobStatus."
+			    return $false | Out-Null
+		    }
+			
+		    # Otherwise wait for the timer job to finish
+		    Write-Host -ForegroundColor DarkGray -NoNewLine "."
+		    Sleep 1
+	    }
+		
+	    # Write a new line to the end of the '.....'
+	    Write-Host
+    }
+
+return $true | Out-Null
+}
+
 function ValidateSolutionDeployment([string]$solutionName)
 {
     $solution = Get-SPSolution -Identity $solutionName -EA 0
@@ -124,7 +125,15 @@ function ValidateSolutionDeployment([string]$solutionName)
         {
             Write-Host -ForegroundColor Cyan "$solutionName has been successfully deployed." 
         }
+		else
+		{
+			Write-Host -ForegroundColor Red "$solutionName encountered an error during deployment." 
+		}
     }
+	else
+	{
+		Write-Host -ForegroundColor Red "$solutionName encountered an error during deployment." 
+	}
 }
 
 $path = Resolve-Path .\$solutionName
