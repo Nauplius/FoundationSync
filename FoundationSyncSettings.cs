@@ -75,7 +75,7 @@ namespace Nauplius.SP.UserSync
             set { m_loggingEx = value; }
         }
 
-        public bool LoggingExVerbose
+        internal bool LoggingExVerbose
         {
             get { return m_loggingExVerbose; }
             set { m_loggingExVerbose = value; }
