@@ -556,13 +556,19 @@ namespace Nauplius.SP.UserSync
 
         private static string SaveImage(SPUser user, Bitmap image, string siteUri, string fileName)
         {
+            if (siteUri == null) return null;
             try
             {
                 using (SPSite site = new SPSite(siteUri))
                 {
                     using (SPWeb web = site.RootWeb)
                     {
-                        var library = web.Lists["UserPhotos"];
+                        var library = (from SPList list in web.Lists
+                                       where list.RootFolder.Name.Equals("UserPhotos")
+                                       select list).FirstOrDefault();
+
+                        if (library == null) return null;
+
                         var ms = new MemoryStream();
 
                         image.Save(ms, ImageFormat.Jpeg);
