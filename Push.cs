@@ -23,7 +23,7 @@ namespace Nauplius.SP.UserSync
         private const string tJobName = "Nauplius.SharePoint.FoundationSync";
         private static int j; //RemoveUsers method
         private static readonly FoundationSyncStorage settingsStorage = new FoundationSyncStorage();
-        private static readonly LoggingEx loggingEx = new LoggingEx();
+        //private static readonly LoggingEx loggingEx = new LoggingEx();
 
         public AttributePush()
             : base()
@@ -43,7 +43,7 @@ namespace Nauplius.SP.UserSync
 
         public override void Execute(Guid targetInstanceId)
         {
-            loggingEx.CreateReportStorage();
+            LoggingEx.CreateReportStorage();
 
             try
             {
@@ -110,6 +110,8 @@ namespace Nauplius.SP.UserSync
                 if (settingsStorage.SyncSettings().LoggingEx)
                     LoggingExData(string.Format("{0} user principals deleted",
                         j), LoggingEx.LoggingExType.UsersDeletedCount);
+
+                LoggingEx.SaveReport();
             }
             catch (IndexOutOfRangeException ex)
             {
@@ -644,7 +646,7 @@ namespace Nauplius.SP.UserSync
 
         internal static void LoggingExData(string logMessage, LoggingEx.LoggingExType logType)
         {
-            loggingEx.BuildReport(logMessage, logType);
+            LoggingEx.BuildReport(logMessage, logType);
         }
     }
 }

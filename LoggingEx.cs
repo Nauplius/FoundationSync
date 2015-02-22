@@ -10,13 +10,13 @@ namespace Nauplius.SP.UserSync
 {
     class LoggingEx
     {
-        private MemoryStream _usersFoundMemoryStream = new MemoryStream();
-        private MemoryStream _usersUpdatedMemoryStream = new MemoryStream();
-        private MemoryStream _usersDeletedMemoryStream = new MemoryStream();
-        private MemoryStream _userPropertiesMemoryStream = new MemoryStream();
+        private static MemoryStream _usersFoundMemoryStream = new MemoryStream();
+        private static MemoryStream _usersUpdatedMemoryStream = new MemoryStream();
+        private static MemoryStream _usersDeletedMemoryStream = new MemoryStream();
+        private static MemoryStream _userPropertiesMemoryStream = new MemoryStream();
         private const string reportLibrary = "SyncReportLibrary";
 
-        internal void CreateReportStorage()
+        internal static void CreateReportStorage()
         {
             var settingsStorage = new FoundationSyncStorage();
 
@@ -24,28 +24,36 @@ namespace Nauplius.SP.UserSync
             if (!settingsStorage.SyncSettings().LoggingEx) return;
             try
             {
-                var adminWebApplication = new SPAdministrationWebApplication();
+                var adminWebApplication = SPAdministrationWebApplication.Local;
 
                 using (SPSite site = adminWebApplication.Sites[0])
                 {
                     var web = site.OpenWeb(site.RootWeb.ID);
 
-                    var library = web.Lists[reportLibrary];
+                    var library = (from SPList list in web.Lists
+                                   where list.RootFolder.Name.Equals(reportLibrary)
+                                   select list).FirstOrDefault();
 
-                    if (library != null) return;
-                    var listTemplates = web.ListTemplates["Document Library"];
-                    var documentTemplate = (from SPDocTemplate dt in web.DocTemplates
-                        where dt.Type == 100
-                        select dt).FirstOrDefault();
-                    var listGuid = web.Lists.Add(reportLibrary,
-                        "Reporting on FoundationSync activity.", listTemplates,
-                        documentTemplate);
+                    if (library == null)
+                    {
+                        var listTemplates = web.ListTemplates["Document Library"];
+                        var documentTemplate = (from SPDocTemplate dt in web.DocTemplates
+                            where dt.Type == 100
+                            select dt).FirstOrDefault();
+                        var listGuid = web.Lists.Add(reportLibrary,
+                            "Reporting on FoundationSync activity.", listTemplates,
+                            documentTemplate);
 
-                    library = (SPDocumentLibrary)web.Lists[listGuid];
-                    library.OnQuickLaunch = true;
-                    library.EnableFolderCreation = false;
-                    library.Update();
-                    settingsStorage.SyncSettings().LoggingExLibrary = (SPDocumentLibrary) library;
+                        library = (SPDocumentLibrary) web.Lists[listGuid];
+                        library.OnQuickLaunch = true;
+                        library.EnableFolderCreation = false;
+                        library.Update();
+                        settingsStorage.SyncSettings().LoggingExLibrary = (SPDocumentLibrary) library;
+                    }
+                    else
+                    {
+                        settingsStorage.SyncSettings().LoggingExLibrary = (SPDocumentLibrary) library;
+                    }
                 }
             }
             catch (Exception e)
@@ -56,9 +64,9 @@ namespace Nauplius.SP.UserSync
             }
         }
 
-        internal void BuildReport(string logMessage, LoggingExType logType)
+        internal static void BuildReport(string logMessage, LoggingExType logType)
         {
-            var bytes = Encoding.UTF8.GetBytes(logMessage);
+            var bytes = Encoding.UTF8.GetBytes(string.Format("{0}\r\n", logMessage));
 
             switch (logType)
             {
@@ -83,33 +91,89 @@ namespace Nauplius.SP.UserSync
             bytes = null;
         }
 
-        internal void SaveReport()
+        internal static void SaveReport()
         {
-            FileStream fileStream = null;
-            
-            _usersFoundMemoryStream.CopyTo(fileStream);
-            _usersUpdatedMemoryStream.CopyTo(fileStream);
-            _usersDeletedMemoryStream.CopyTo(fileStream);
-            _usersUpdatedMemoryStream.CopyTo(fileStream);
-            fileStream.Flush();
+            var settingsStorage = new FoundationSyncStorage();
 
-            const string format = "MMdyyyy-HHmm-FoundationSync.log";
+            if (settingsStorage.SyncSettings() == null) return;
+            if (!settingsStorage.SyncSettings().LoggingEx) return;
+            if (settingsStorage.SyncSettings().LoggingExLibrary == null) return;
 
-            var fileName = string.Format("{0}", DateTime.Now.ToString(format));
+            var dt = DateTime.Now.ToString("MMdyyyy-HHmm");
+
+            var fileName = string.Format("{0}-FoundationSync.log", dt);
 
             try
             {
-                var syncSettings = new FoundationSyncSettings();
-                var library = syncSettings.LoggingExLibrary;
-                
-                using(SPSite site = new SPSite(library.ParentWeb.Site.ID))
+                var adminWebApplication = SPAdministrationWebApplication.Local;
+
+                using (SPSite site = adminWebApplication.Sites[0])
                 {
-                    using (SPWeb web = site.OpenWeb(library.ParentWeb.ID))
+                    var web = site.OpenWeb(site.RootWeb.ID);
+
+                    var library = (from SPList list in web.Lists
+                        where list.RootFolder.Name.Equals(reportLibrary)
+                        select list).FirstOrDefault();
+
+                    var folder = library.RootFolder;
+                    var tempBytes = Encoding.UTF8.GetBytes("Abc123");
+                    var tempStream = new MemoryStream(tempBytes);
+
+                    folder.Files.Add(fileName, tempStream, true);
+                    folder.Update();
+
+                    var url = string.Format("{0}/{1}", folder.Url, fileName);
+                    var file = web.GetFile(url);
+                    var stream = file.OpenBinaryStream();
+
+                    stream.Position = 0;
+
+                    var separatorMessage = Encoding.UTF8.GetBytes("\r\n-------------------\r\n");
+
+                    var userFoundBytes = _usersFoundMemoryStream.GetBuffer();
+                    if (userFoundBytes.Length == 0)
                     {
-                        var folder = library.RootFolder;
-                        folder.Files.Add(fileName, fileStream, false);
-                        folder.Update();
+                        var logMessage = Encoding.UTF8.GetBytes("No User or Groups Found.\r\n");
+                        stream.Write(logMessage, 0, logMessage.Length);
                     }
+                    {
+                        stream.Write(userFoundBytes, 0, userFoundBytes.Length);  
+                    }
+
+                    stream.Write(separatorMessage, 0, separatorMessage.Length);
+
+                    var userUpdatedBytes = _usersUpdatedMemoryStream.GetBuffer();
+
+                    if (userUpdatedBytes.Length == 0)
+                    {
+                        var logMessage = Encoding.UTF8.GetBytes("No User or Groups Updated.\r\n");
+                        stream.Write(logMessage, 0, logMessage.Length);
+                    }
+                    else
+                    {
+                        stream.Write(userUpdatedBytes, 0, userUpdatedBytes.Length);
+                    }
+
+                    stream.Write(separatorMessage, 0, separatorMessage.Length);
+
+                    var userDeletedBytes = _usersDeletedMemoryStream.GetBuffer();
+
+                    if (userDeletedBytes.Length == 0)
+                    {
+                        var logMessage = Encoding.UTF8.GetBytes("No Users Deleted.\r\n");
+                        stream.Write(logMessage, 0, logMessage.Length);
+                    }
+                    else
+                    {
+                        stream.Write(userDeletedBytes, 0, userDeletedBytes.Length);
+                        stream.Flush();                        
+                    }
+
+                    //byte[] userPropertyBytes = _userPropertiesMemoryStream.GetBuffer();
+                    //stream.Write(userPropertyBytes, 0, userPropertyBytes.Length);
+
+                    file.SaveBinary(stream);
+                    file.Update();
                 }
             }
             catch (Exception)
