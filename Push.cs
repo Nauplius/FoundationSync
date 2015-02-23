@@ -286,7 +286,7 @@ namespace Nauplius.SP.UserSync
                 {
                     var item = listItems[j];
 
-                    if (item["Account"].ToString().ToLower() != group.LoginName.ToLower()) continue;
+                    if (item["Name"].ToString().ToLower() != group.LoginName.ToLower()) continue;
                     item["EMail"] = (directoryEntry.Properties["mail"].Value == null)
                         ? string.Empty
                         : directoryEntry.Properties["mail"].Value.ToString();
