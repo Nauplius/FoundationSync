@@ -82,7 +82,8 @@ namespace Nauplius.SP.UserSync
 
                         FoudationSync.LogMessage(100, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} user principals in site {1}", userAccounts.Count, site.Url), null);
-                        GetDomains(userAccounts, webApplication, site, false);
+                        //GetDomains(userAccounts, webApplication, site, false);
+                        SearchPrincipals(userAccounts, webApplication, site, false);
                         userAccounts.Clear();
 
                         foreach (SPUser groupPrincipal in from SPUser groupPrincipal in site.RootWeb.SiteUsers
@@ -100,7 +101,8 @@ namespace Nauplius.SP.UserSync
 
                         FoudationSync.LogMessage(101, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} group principals in site {1}", groupAccounts.Count, site.Url), null);
-                        GetDomains(groupAccounts, webApplication, site, true);
+                        //GetDomains(groupAccounts, webApplication, site, true);
+                        SearchPrincipals(groupAccounts, webApplication, site, true);
                         groupAccounts.Clear();
 
                         site.Dispose();
@@ -113,13 +115,13 @@ namespace Nauplius.SP.UserSync
 
                 LoggingEx.SaveReport();
             }
-            catch (IndexOutOfRangeException ex)
+            catch (IndexOutOfRangeException)
             {
                 FoudationSync.LogMessage(102, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Medium,
                    string.Format("Index was out of range."), null);               
             }
         }
-
+/*
         private static void GetDomains(HashSet<SPUser> objPrincipals, SPWebApplication webApplication, SPSite site, bool isGroup)
         {
             var domains = webApplication.PeoplePickerSettings.SearchActiveDirectoryDomains;
@@ -141,13 +143,14 @@ namespace Nauplius.SP.UserSync
                 }
             }
         }
-
-        private static void SearchPrincipals(SPPeoplePickerSearchActiveDirectoryDomain domain, HashSet<SPUser> objPrincipals,
+*/
+        private static void SearchPrincipals(HashSet<SPUser> objPrincipals,
                                  SPWebApplication webApplication, SPSite site, bool isGroup)
         {
             var chasing = webApplication.PeoplePickerSettings.ReferralChasingOption;
 
             {
+                /*
                 string ldapPath = null;
 
                 try
@@ -162,7 +165,7 @@ namespace Nauplius.SP.UserSync
                     FoudationSync.LogMessage(500, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                         "Unexpected exception attempting to retrieve domain name. " + e.StackTrace, null);
                 }
-
+                */
                 var listItems = site.RootWeb.SiteUserInfoList.Items;
                 var itemCount = listItems.Count;
 
@@ -181,6 +184,7 @@ namespace Nauplius.SP.UserSync
                             try
                             {
                                 loginName = new SecurityIdentifier(sid).Translate(typeof(NTAccount)).ToString();
+
                             }
                             catch (IdentityNotMappedException exception)
                             {
@@ -194,6 +198,8 @@ namespace Nauplius.SP.UserSync
                             loginName = objPrincipal.LoginName;
                         }
 
+                        var ldapPath = GetDomain(loginName.Split('\\')[0]);
+
                         properties = new[]{
                             "sAMAccountName", "mail", "proxyAddresses"
                         };
@@ -202,6 +208,7 @@ namespace Nauplius.SP.UserSync
                         var i = loginName.LastIndexOf('\\');
                         var objName = loginName.Remove(0, i + 1);
                         filter = string.Format("(&(objectClass=group)(sAMAccountName={0}))", objName);
+
                         var searcher = new DirectorySearcher(entry, filter, properties)
                         {
                             ReferralChasing = chasing
@@ -238,10 +245,12 @@ namespace Nauplius.SP.UserSync
                             "thumbnailPhoto"
                         };
 
+                        var ldapPath = GetDomain(loginName.Split('\\')[0]);
                         var entry = new DirectoryEntry("LDAP://" + ldapPath);
-                        var i = loginName.LastIndexOf('\\');
-                        var objName = loginName.Remove(0, i + 1);
-                        filter = string.Format("(&(objectClass=user)(sAMAccountName={0}))", objName);
+                       // var i = loginName.LastIndexOf('\\');
+                        //var objName = loginName.Remove(0, i + 1);
+
+                        filter = string.Format("(&(objectClass=user)(sAMAccountName={0}))", loginName.Split('\\')[1]);
                         var searcher = new DirectorySearcher(entry, filter, properties)
                         {
                             ReferralChasing = chasing
@@ -609,8 +618,29 @@ namespace Nauplius.SP.UserSync
             return null;
         }
 
+        private static string GetDomain(string domainName)
+        {
+            string ldapPath = null;
+
+            try
+            {
+                var objContext = new DirectoryContext(
+                    DirectoryContextType.Domain, domainName);
+                var objDomain = Domain.GetDomain(objContext);
+                ldapPath = objDomain.Name;
+            }
+            catch (DirectoryServicesCOMException e)
+            {
+                FoudationSync.LogMessage(500, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                    "Unexpected exception attempting to retrieve domain name. " + e.StackTrace, null);
+            }
+
+            return ldapPath;
+        }
+
         private static bool IsActive(DirectoryEntry de)
         {
+            if (de == null) return false;
             if (de.NativeGuid == null) return false;
 
             var flags = (int)de.Properties["userAccountControl"].Value;
