@@ -50,18 +50,41 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="Microsoft.SharePoint" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Features\FoundationSync\FoundationSync.EventReceiver.cs">
       <DependentUpon>FoundationSync.feature</DependentUpon>
     </Compile>
+    <Compile Include="Features\UserPhotosFeature\UserPhotosFeature.EventReceiver.cs">
+      <DependentUpon>UserPhotosFeature.feature</DependentUpon>
+    </Compile>
+    <Compile Include="FoundationSyncSettings.cs" />
+    <Compile Include="FoundationSyncStorage.cs" />
+    <Compile Include="ADMIN\FoundationSync\ProfileSettings.aspx.cs">
+      <DependentUpon>ProfileSettings.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ADMIN\FoundationSync\ProfileSettings.aspx.designer.cs">
+      <DependentUpon>ProfileSettings.aspx.cs</DependentUpon>
+    </Compile>
     <Compile Include="Logging.cs" />
+    <Compile Include="LoggingEx.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Push.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ADMIN\SharePointProjectItem.spdata">
+      <SharePointProjectItemId>{31e0493e-73e1-471a-94e9-cf3490e908cf}</SharePointProjectItemId>
+    </None>
+    <None Include="Features\UserPhotosFeature\UserPhotosFeature.feature">
+      <FeatureId>{489c0cad-4514-4fae-9d31-261b2ba889e8}</FeatureId>
+    </None>
     <None Include="Features\FoundationSync\FoundationSync.feature">
       <FeatureId>{a4fa9ce5-1b91-4de1-ab5c-cadee9e7aded}</FeatureId>
     </None>
@@ -75,13 +98,22 @@
     <None Include="Package\Package.Template.xml">
       <DependentUpon>Package.package</DependentUpon>
     </None>
+    <None Include="SyncLink\SharePointProjectItem.spdata">
+      <SharePointProjectItemId>{3db0f709-1e79-4b05-beeb-9624400daf87}</SharePointProjectItemId>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="ADMIN\FoundationSync\icon_32x32.png" />
+    <Content Include="Features\UserPhotosFeature\UserPhotosFeature.Template.xml">
+      <DependentUpon>UserPhotosFeature.feature</DependentUpon>
+    </Content>
     <Content Include="Features\FoundationSync\FoundationSync.Template.xml">
       <DependentUpon>FoundationSync.feature</DependentUpon>
     </Content>
     <Content Include="Images\Nauplius.SharePoint.FoundationSync\image32x32.png" />
+    <Content Include="ADMIN\FoundationSync\ProfileSettings.aspx" />
+    <Content Include="SyncLink\Elements.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

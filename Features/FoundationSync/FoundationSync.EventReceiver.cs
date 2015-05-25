@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.SharePoint;
@@ -17,13 +18,11 @@ namespace Nauplius.SP.UserSync.Features.UserSync
     {
         private const string tJobName = "Nauplius.SharePoint.FoundationSync";
 
-        // Uncomment the method below to handle the event raised after a feature has been activated.
-
         public override void FeatureActivated(SPFeatureReceiverProperties properties)
         {
-            var local = SPFarm.Local;
+            var farm = SPFarm.Local;
 
-            var services = from s in local.Services
+            var services = from s in farm.Services
                            where s.Name == "SPTimerV4"
                            select s;
 
@@ -35,14 +34,24 @@ namespace Nauplius.SP.UserSync.Features.UserSync
             }
 
             var schedule = new SPDailySchedule { BeginHour = 0, EndHour = 4 };
-            var timerJob = new AttributePush(tJobName, service) { Schedule = schedule };
-            timerJob.Update();
+
+            try
+            {
+                if (!string.IsNullOrEmpty(farm.Properties.ContainsKey("FoundationSyncPreferredServer").ToString()))
+                {
+                    var server = farm.Servers[farm.Properties["FoundationSyncPreferredServer"].ToString()];
+                    var timerJob = new AttributePush(tJobName, service, server, SPJobLockType.Job) { Schedule = schedule };
+                    timerJob.Update();
+                }
+            }
+            catch (NullReferenceException)
+            {
+                var timerJob = new AttributePush(tJobName, service) { Schedule = schedule };
+                timerJob.Update();
+            }
 
             RegisterLogging(properties, true);
         }
-
-
-        // Uncomment the method below to handle the event raised before a feature is deactivated.
 
         public override void FeatureDeactivating(SPFeatureReceiverProperties properties)
         {
@@ -51,21 +60,33 @@ namespace Nauplius.SP.UserSync.Features.UserSync
             RegisterLogging(properties, false);
         }
 
-
-        // Uncomment the method below to handle the event raised after a feature has been installed.
-
-        //public override void FeatureInstalled(SPFeatureReceiverProperties properties)
-        //{
-        //}
-
-
-        // Uncomment the method below to handle the event raised before a feature is uninstalled.
+        public override void FeatureInstalled(SPFeatureReceiverProperties properties)
+        {
+            try
+            {
+                var persistedObject = FoundationSyncSettings.Local;
+                persistedObject.Provision();
+                persistedObject.Update();
+            }
+            catch (Exception)
+            {
+            }
+        }
 
         public override void FeatureUninstalling(SPFeatureReceiverProperties properties)
         {
             DeleteJob();
 
             RegisterLogging(properties, false);
+
+            try
+            {
+                var persistedObject = FoundationSyncSettings.Local;
+                persistedObject.Unprovision();
+            }
+            catch (Exception)
+            {
+            }
         }
 
         // Uncomment the method below to handle the event raised when a feature is upgrading.

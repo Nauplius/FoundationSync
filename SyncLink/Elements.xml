@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Elements xmlns="http://schemas.microsoft.com/sharepoint/">
+	<CustomActionGroup Id="179E235D-75D1-4CFC-A999-DAC4FCCE78B4"
+							 Title="Foundation Sync"
+							 Location="Microsoft.SharePoint.Administration.Applications"
+							 ImageUrl="/_admin/FoundationSync/icon_32x32.png"
+							 RequiredAdmin="Farm"
+							 Sequence="120" />
+	<CustomAction Id="EBA0FDB5-15B9-4558-BEE5-5D15403EA37D"
+								Title="Configure Profile Sync Settings"
+								Sequence="10"
+								GroupId="179E235D-75D1-4CFC-A999-DAC4FCCE78B4"
+								Location="Microsoft.SharePoint.Administration.Applications">
+		<UrlAction Url="/_admin/FoundationSync/ProfileSettings.aspx"/>
+	</CustomAction>
+</Elements>
