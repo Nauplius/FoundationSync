@@ -22,8 +22,7 @@ namespace Nauplius.SP.UserSync
     {
         private const string tJobName = "Nauplius.SharePoint.FoundationSync";
         private static int j; //RemoveUsers method
-        private static readonly FoundationSyncStorage settingsStorage = new FoundationSyncStorage();
-        //private static readonly LoggingEx loggingEx = new LoggingEx();
+        private readonly bool _loggingEx = FoundationSyncSettings.Local.LoggingEx;
 
         public AttributePush()
             : base()
@@ -44,25 +43,23 @@ namespace Nauplius.SP.UserSync
         public override void Execute(Guid targetInstanceId)
         {
             LoggingEx.CreateReportStorage();
-
+            
             try
             {
                 var farm = SPFarm.Local;
-                var ignoredUsers = settingsStorage.SyncSettings().IgnoredUsers;
+                var ignoredUsers = FoundationSyncSettings.Local.IgnoredUsers;
                 var service = farm.Services.GetValue<SPWebService>();
                 var userAccounts = new HashSet<SPUser>();
                 var groupAccounts = new HashSet<SPUser>();
-
-
-                var webApplications = settingsStorage.SyncSettings().WebApplicationCollection.Count < 1
+                var webApplications = FoundationSyncSettings.Local.WebApplicationCollection.Count < 1
                     ? (IEnumerable<SPWebApplication>) service.WebApplications
-                    : settingsStorage.SyncSettings().WebApplicationCollection;
+                    : FoundationSyncSettings.Local.WebApplicationCollection;
 
                 foreach (SPWebApplication webApplication in webApplications)
                 {
-                    var siteCollections = settingsStorage.SyncSettings().SPSiteCollection.Count < 1
+                    var siteCollections = FoundationSyncSettings.Local.SPSiteCollection.Count < 1
                         ? (IEnumerable<SPSite>) webApplication.Sites
-                        : settingsStorage.SyncSettings().SPSiteCollection;
+                        : FoundationSyncSettings.Local.SPSiteCollection;
 
                     foreach (SPSite site in siteCollections)
                     {
@@ -76,13 +73,13 @@ namespace Nauplius.SP.UserSync
                             userAccounts.Add(userPrincipal);
                         }
 
-                        if (settingsStorage.SyncSettings().LoggingEx)
+                        if (_loggingEx)
                             LoggingExData(string.Format("{0} user principals in site {1}", 
                                 userAccounts.Count, site.Url), LoggingEx.LoggingExType.UsersFoundCount);
 
                         FoudationSync.LogMessage(100, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} user principals in site {1}", userAccounts.Count, site.Url), null);
-                        //GetDomains(userAccounts, webApplication, site, false);
+
                         SearchPrincipals(userAccounts, webApplication, site, false);
                         userAccounts.Clear();
 
@@ -95,13 +92,13 @@ namespace Nauplius.SP.UserSync
                             groupAccounts.Add(groupPrincipal);
                         }
 
-                        if (settingsStorage.SyncSettings().LoggingEx)
+                        if (_loggingEx)
                             LoggingExData(string.Format("{0} group principals in site {1}",
-                                userAccounts.Count, site.Url), LoggingEx.LoggingExType.UsersFoundCount);
+                                groupAccounts.Count, site.Url), LoggingEx.LoggingExType.UsersFoundCount);
 
                         FoudationSync.LogMessage(101, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} group principals in site {1}", groupAccounts.Count, site.Url), null);
-                        //GetDomains(groupAccounts, webApplication, site, true);
+
                         SearchPrincipals(groupAccounts, webApplication, site, true);
                         groupAccounts.Clear();
 
@@ -109,7 +106,7 @@ namespace Nauplius.SP.UserSync
                     }
                 }
 
-                if (settingsStorage.SyncSettings().LoggingEx)
+                if (_loggingEx)
                     LoggingExData(string.Format("{0} user principals deleted",
                         j), LoggingEx.LoggingExType.UsersDeletedCount);
 
@@ -121,51 +118,13 @@ namespace Nauplius.SP.UserSync
                    string.Format("Index was out of range."), null);               
             }
         }
-/*
-        private static void GetDomains(HashSet<SPUser> objPrincipals, SPWebApplication webApplication, SPSite site, bool isGroup)
-        {
-            var domains = webApplication.PeoplePickerSettings.SearchActiveDirectoryDomains;
 
-            if (domains.Count == 0)
-            {
-                var domain = new SPPeoplePickerSearchActiveDirectoryDomain
-                {
-                    DomainName = Environment.UserDomainName
-                };
-
-                SearchPrincipals(domain, objPrincipals, webApplication, site, isGroup);
-            }
-            else
-            {
-                foreach (var domain in domains)
-                {
-                    SearchPrincipals(domain, objPrincipals, webApplication, site, isGroup);
-                }
-            }
-        }
-*/
         private static void SearchPrincipals(HashSet<SPUser> objPrincipals,
                                  SPWebApplication webApplication, SPSite site, bool isGroup)
         {
             var chasing = webApplication.PeoplePickerSettings.ReferralChasingOption;
 
             {
-                /*
-                string ldapPath = null;
-
-                try
-                {
-                    var objContext = new DirectoryContext(
-                        DirectoryContextType.Domain, domain.DomainName);
-                    var objDomain = Domain.GetDomain(objContext);
-                    ldapPath = objDomain.Name;
-                }
-                catch (DirectoryServicesCOMException e)
-                {
-                    FoudationSync.LogMessage(500, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                        "Unexpected exception attempting to retrieve domain name. " + e.StackTrace, null);
-                }
-                */
                 var listItems = site.RootWeb.SiteUserInfoList.Items;
                 var itemCount = listItems.Count;
 
@@ -183,14 +142,15 @@ namespace Nauplius.SP.UserSync
 
                             try
                             {
-                                loginName = new SecurityIdentifier(sid).Translate(typeof(NTAccount)).ToString();
+                                loginName = new SecurityIdentifier(sid).Translate(typeof (NTAccount)).ToString();
 
                             }
-                            catch (IdentityNotMappedException exception)
+                            catch (Exception exception)
                             {
-                                FoudationSync.LogMessage(503, FoudationSync.LogCategories.FoundationSync, TraceSeverity.High,
+                                FoudationSync.LogMessage(503, FoudationSync.LogCategories.FoundationSync,
+                                    TraceSeverity.High,
                                     exception.Message + exception.StackTrace, null);
-                                break;
+                                continue;
                             }
                         }
                         else
@@ -246,9 +206,11 @@ namespace Nauplius.SP.UserSync
                         };
 
                         var ldapPath = GetDomain(loginName.Split('\\')[0]);
+
+                        if (string.IsNullOrEmpty(ldapPath))
+                            continue;
+
                         var entry = new DirectoryEntry("LDAP://" + ldapPath);
-                       // var i = loginName.LastIndexOf('\\');
-                        //var objName = loginName.Remove(0, i + 1);
 
                         filter = string.Format("(&(objectClass=user)(sAMAccountName={0}))", loginName.Split('\\')[1]);
                         var searcher = new DirectorySearcher(entry, filter, properties)
@@ -425,9 +387,8 @@ namespace Nauplius.SP.UserSync
 
         private static string GetThumbnail(SPUser user, DirectoryEntry directoryEntry)
         {
-            var farm = SPFarm.Local;
-            var siteUri = (string)farm.Properties["pictureStorageUrl"];
-            if (string.IsNullOrEmpty(siteUri)) return null;
+            var siteUri = FoundationSyncSettings.Local.PictureStorageUrl;
+            if (string.IsNullOrEmpty(siteUri.AbsoluteUri)) return null;
 
             var fileUri = string.Empty;
 
@@ -447,7 +408,7 @@ namespace Nauplius.SP.UserSync
 
             try
             {
-                using (SPSite site = new SPSite(siteUri))
+                using (SPSite site = new SPSite(siteUri.AbsoluteUri))
                 {
                     var web = site.RootWeb;
                     var list = web.GetList("UserPhotos");
@@ -458,32 +419,23 @@ namespace Nauplius.SP.UserSync
                     {
                         var pictureExpiryDays = 1;
 
-                        if (farm.Properties.ContainsKey("pictureExpiryDays"))
+                        try
                         {
-                            try
-                            {
-                                if ((int) farm.Properties["pictureExpiryDays"] < -1)
-                                {
-                                    pictureExpiryDays = -1; //Picture will always be updated
-                                }
-                                else
-                                {
-                                    pictureExpiryDays = (int) farm.Properties["pictureExpiryDays"];
-                                }
+                            pictureExpiryDays = FoundationSyncSettings.Local.PictureExpiryDays;
 
-                            }
-                            catch (InvalidCastException)
-                            {
-                                //Resetting invalid value to 1 day
-                                farm.Properties["pictureExpiryDays"] = "1";
-                                farm.Update(true);
-                            }
-                            catch (OverflowException)
-                            {
-                                //Resetting invalid value to 1 day
-                                farm.Properties["pictureExpiryDays"] = "1";
-                                farm.Update(true);
-                            }
+                            if (pictureExpiryDays < -1)
+                                FoundationSyncSettings.Local.PictureExpiryDays = 1;
+                            pictureExpiryDays = 1;
+                        }
+                        catch (InvalidCastException)
+                        {
+                            FoundationSyncSettings.Local.PictureExpiryDays = 1;
+                            pictureExpiryDays = 1;
+                        }
+                        catch (OverflowException)
+                        {
+                            FoundationSyncSettings.Local.PictureExpiryDays = 1;
+                            pictureExpiryDays = 1;
                         }
 
                         if ((file.TimeLastModified - DateTime.Now).TotalDays < pictureExpiryDays)
@@ -509,16 +461,16 @@ namespace Nauplius.SP.UserSync
                     string.Format("Error retriving file, continuing to pull new file."), null);
             }
 
-            if ((string) farm.Properties["useExchange"] == "True")
+            if (FoundationSyncSettings.Local.UseExchange)
             {
                 var ewsPictureSize = "648x648";
 
-                if (farm.Properties.ContainsKey("ewsPictureSize"))
+                if (FoundationSyncSettings.Local.EwsPictureSize != null)
                 {
-                    ewsPictureSize = (string)farm.Properties["ewsPictureSize"];
+                    ewsPictureSize = FoundationSyncSettings.Local.EwsPictureSize;
                 }
 
-                var uri = new UriBuilder(string.Format("{0}/s/GetUserPhoto?email={1}&size=HR{2}", farm.Properties["ewsUrl"], user.Email, ewsPictureSize));
+                var uri = new UriBuilder(string.Format("{0}/s/GetUserPhoto?email={1}&size=HR{2}", FoundationSyncSettings.Local.EwsUrl, user.Email, ewsPictureSize));
 
                 SPSecurity.RunWithElevatedPrivileges(delegate
                 {
@@ -534,7 +486,7 @@ namespace Nauplius.SP.UserSync
                                 if (response.GetResponseStream() != null)
                                 {
                                     var image = new Bitmap(response.GetResponseStream());
-                                    fileUri = SaveImage(user, image, siteUri, fileName);
+                                    fileUri = SaveImage(image, siteUri.AbsoluteUri, fileName);
                                 }
                             }
                             else if (response.StatusCode == HttpStatusCode.NotFound ||
@@ -558,18 +510,18 @@ namespace Nauplius.SP.UserSync
             {
                 try
                 {
-                    var byteArray = (byte[])directoryEntry.Properties["thumbnailPhoto"][0];
+                    var byteArray = (byte[])directoryEntry.Properties["thumbnailPhoto"].Value;
 
                     if (byteArray.Length > 0)
                     {
                         using (var ms = new MemoryStream(byteArray))
                         {
                             var image = new Bitmap(ms);
-                            fileUri = SaveImage(user, image, siteUri, fileName);
+                            fileUri = SaveImage(image, siteUri.AbsoluteUri, fileName);
                         }
                     }
                 }
-                catch (IndexOutOfRangeException)
+                catch (Exception)
                 {
                     return string.Empty;
                 }
@@ -578,7 +530,7 @@ namespace Nauplius.SP.UserSync
             return !string.IsNullOrEmpty(fileUri) ? fileUri : null;
         }
 
-        private static string SaveImage(SPUser user, Bitmap image, string siteUri, string fileName)
+        private static string SaveImage(Bitmap image, string siteUri, string fileName)
         {
             if (siteUri == null) return null;
             try
@@ -629,10 +581,11 @@ namespace Nauplius.SP.UserSync
                 var objDomain = Domain.GetDomain(objContext);
                 ldapPath = objDomain.Name;
             }
-            catch (DirectoryServicesCOMException e)
+            catch (Exception e)
             {
                 FoudationSync.LogMessage(500, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                    "Unexpected exception attempting to retrieve domain name. " + e.StackTrace, null);
+                    string.Format("Unexpected exception attempting to retrieve domain name: {0}. {1}", domainName, e.StackTrace), null);
+                return null;
             }
 
             return ldapPath;
@@ -651,7 +604,7 @@ namespace Nauplius.SP.UserSync
 
         private static void RemoveUsers(SPUser objPrincipal, string siteUrl)
         {
-            if (!settingsStorage.SyncSettings().DeleteUsers && !settingsStorage.SyncSettings().DeleteDisabledUsers)
+            if (!FoundationSyncSettings.Local.DeleteUsers && !FoundationSyncSettings.Local.DeleteDisabledUsers)
                 return;
 
             using (SPSite site = new SPSite(siteUrl))

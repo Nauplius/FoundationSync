@@ -83,7 +83,6 @@ namespace Nauplius.SP.UserSync.Features.UserSync
             {
                 var persistedObject = FoundationSyncSettings.Local;
                 persistedObject.Unprovision();
-                persistedObject.Delete();
             }
             catch (Exception)
             {

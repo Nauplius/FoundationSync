@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Net;
-using System.Web.UI.WebControls;
-using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
 using Microsoft.SharePoint.Utilities;
 using Microsoft.SharePoint.WebControls;
@@ -20,18 +17,14 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
 
         protected void btnSave_OnClick(object sender, EventArgs e)
         {
-            var farm = SPFarm.Local;
-
             if (!string.IsNullOrEmpty(tBox1.Text))
             {
                 ValidateSiteCollection();
             }
             else
             {
-                if (farm.Properties.ContainsKey("pictureStorageUrl"))
-                {
-                    farm.Properties.Remove("pictureStorageUrl");
-                }
+                FoundationSyncSettings.Local.PictureStorageUrl = null;
+                FoundationSyncSettings.Local.Update();
             }
 
             if (!string.IsNullOrEmpty(tBox2.Text))
@@ -40,15 +33,10 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             }
             else
             {
-                if (farm.Properties.ContainsKey("useExchange"))
-                {
-                    farm.Properties.Remove("useExchange");
-                }
-
-                if (farm.Properties.ContainsKey("ewsUrl"))
-                {
-                    farm.Properties.Remove("ewsUrl");
-                }
+                FoundationSyncSettings.Local.UseExchange = false;
+                FoundationSyncSettings.Local.Update();
+                FoundationSyncSettings.Local.EwsUrl = null;
+                FoundationSyncSettings.Local.Update();
             }
 
             if (Page.IsValid)
@@ -65,113 +53,63 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
                 v2.IsValid = false;
                 return;
             }
+            FoundationSyncSettings.Local.PictureStorageUrl = null;
+            FoundationSyncSettings.Local.Update();
 
-            try
-            {
-                var farm = SPFarm.Local;
-                var url = tBox1.Text + "/UserPhotos";
-
-                if (farm.Properties.ContainsKey("pictureStorageUrl"))
-                {
-                    farm.Properties["pictureStorageUrl"] = url;
-                }
-                else
-                {
-                    farm.Properties.Add("pictureStorageUrl", url);
-                }
-
-                farm.Update(true);
-            }
-            catch (Exception ex)
-            {
-                FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                    string.Format("Unable to set pictureStorageUrl with error {0}.", ex.InnerException), null);
-            }
+            var tbox1Uri = new Uri(tBox1.Text + "/UserPhotos");
+            FoundationSyncSettings.Local.PictureStorageUrl = tbox1Uri;
+            FoundationSyncSettings.Local.Update();
         }
 
         internal void ValidateExchangeConnection()
         {
-            var uri = new UriBuilder(tBox2.Text);
+            var uriBuilder = new UriBuilder(tBox2.Text);
 
-            SPSecurity.RunWithElevatedPrivileges(delegate
+            try
             {
-                try
-                {
-                    var farm = SPFarm.Local;
-
-                    if (farm.Properties.ContainsKey("useExchange"))
-                    {
-                        farm.Properties["useExchange"] = "True";
-                    }
-                    else
-                    {
-                        farm.Properties.Add("useExchange", "True");
-                    }
-
-                    if (farm.Properties.ContainsKey("ewsUrl"))
-                    {
-                        farm.Properties["ewsUrl"] = uri.Uri.ToString();
-                    }
-                    else
-                    {
-                        farm.Properties.Add("ewsUrl", uri.Uri.ToString());
-                    }
-
-                    farm.Update(true);
-                }
-                catch (Exception ex)
-                {
-                    FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                        string.Format("Unable to set useExchange or ewsUrl values with error {0}.", ex.InnerException), null);
-                }                
-            });
+                FoundationSyncSettings.Local.UseExchange = true;
+                FoundationSyncSettings.Local.Update();
+                FoundationSyncSettings.Local.EwsUrl = uriBuilder.Uri;
+                FoundationSyncSettings.Local.Update();
+            }
+            catch (Exception ex)
+            {
+                FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                    string.Format("Unable to set UseExchange or EwsUrl values with error {0}.", ex.InnerException), null);
+            }
         }
 
         internal void LoadSettings()
         {
-            var farm = SPFarm.Local;
-
             try
             {
-                if (farm.Properties.ContainsKey("useExchange") && (string) farm.Properties["useExchange"] == "True")
+                if (FoundationSyncSettings.Local.UseExchange)
                 {
-                    if (!string.IsNullOrEmpty(farm.Properties["ewsUrl"].ToString()))
-                    {
-                        tBox2.Text = farm.Properties["ewsUrl"].ToString();
-                    }
-                    else
-                    {
-                        farm.Properties["useExchange"] = "False";
-                        farm.Update();
-                    }   
+                    tBox2.Text = FoundationSyncSettings.Local.EwsUrl.AbsoluteUri;
                 }
             }
             catch (Exception)
             {
-                FoudationSync.LogMessage(1001, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                    string.Format("Unable to retrieve useExchange or ewsUrl when loading settings. " +
-                                  "Try setting them manually on the SPFarm object."), null);
+                FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                    string.Format("Unable to retrieve EwsUrl when loading settings."), null);                
             }
 
             try
             {
-                if (!farm.Properties.ContainsKey("pictureStorageUrl") ||
-                    string.IsNullOrEmpty(farm.Properties["pictureStorageUrl"].ToString())) return;
-                
+                if (FoundationSyncSettings.Local.PictureStorageUrl != null)
+                {
+                     var uri = FoundationSyncSettings.Local.PictureStorageUrl.AbsoluteUri;
 
-
-                var url = farm.Properties["pictureStorageUrl"].ToString();
-                var index = url.LastIndexOf("/", StringComparison.Ordinal);
-
-                if (index > 0)
-                    url = url.Substring(0, index);
-                tBox1.Text = url;
+                    if(uri.EndsWith("/UserPhotos"))
+                    {
+                        tBox1.Text = uri.Replace("/UserPhotos", string.Empty);
+                    }
+                }
             }
             catch (Exception)
             {
                 FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                    string.Format("Unable to retrieve pictureStorageUrl when loading settings. " +
-                                  "Try setting it manually on the SPFarm object."), null);
+                    string.Format("Unable to retrieve PictureStorageUrl when loading settings."), null);     
             }
         }
     }

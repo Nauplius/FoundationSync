@@ -8,8 +8,8 @@ Write-Host -ForegroundColor White "$solutionName Installation Script"
 Write-Host -ForegroundColor White "----------------------------------"
 Write-Host -ForegroundColor White "Information about this solution can be found at $solutionUri."
 Write-Host -ForegroundColor DarkYellow "License: GPLv2"
-Write-Host -ForegroundColor DarkYellow "Release Date: 04/20/1015"
-Write-Host -ForegroundColor DarkYellow "Version: 2.54B"
+Write-Host -ForegroundColor DarkYellow "Release Date: 05/24/1015"
+Write-Host -ForegroundColor DarkYellow "Version: 2.55B"
 Write-Host -ForegroundColor DarkYellow "Platform: SharePoint 2013"
 Write-Host
 

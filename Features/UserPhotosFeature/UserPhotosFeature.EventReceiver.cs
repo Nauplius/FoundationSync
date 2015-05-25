@@ -40,13 +40,19 @@ namespace Nauplius.SP.UserSync.Features.UserPhotosFeature
         {
             try
             {
-
                 web.AllowUnsafeUpdates = true;
                 web.Lists.Add("UserPhotos",
                     "This library holds User Photos pulled from Active Directory and/or Exchange",
                     SPListTemplateType.PictureLibrary);
                 web.AllowUnsafeUpdates = false;
                 web.Update();
+
+                var list = web.GetList("UserPhotos");
+                list.OnQuickLaunch = false;
+                list.EnableThrottling = false;
+                list.EnableFolderCreation = false;
+                list.Hidden = true;
+                list.Update();
             }
             catch (Exception ex)
             {

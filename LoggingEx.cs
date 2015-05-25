@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
@@ -169,8 +168,10 @@ namespace Nauplius.SP.UserSync
                         stream.Flush();                        
                     }
 
-                    //byte[] userPropertyBytes = _userPropertiesMemoryStream.GetBuffer();
-                    //stream.Write(userPropertyBytes, 0, userPropertyBytes.Length);
+                    _userPropertiesMemoryStream.Dispose();
+                    _usersDeletedMemoryStream.Dispose();
+                    _usersFoundMemoryStream.Dispose();
+                    _usersUpdatedMemoryStream.Dispose();
 
                     file.SaveBinary(stream);
                     file.Update();
@@ -179,7 +180,6 @@ namespace Nauplius.SP.UserSync
             catch (Exception)
             {
                 //ToDo: Log to ULS
-                throw;
             }
         }
 

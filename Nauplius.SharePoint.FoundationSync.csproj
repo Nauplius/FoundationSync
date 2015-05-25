@@ -56,20 +56,12 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.SharePoint.Powershell, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\Windows\Microsoft.NET\assembly\GAC_MSIL\Microsoft.SharePoint.PowerShell\v4.0_15.0.0.0__71e9bce111e9429c\Microsoft.SharePoint.Powershell.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="Microsoft.SharePoint" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Features\FoundationSync\FoundationSync.EventReceiver.cs">
@@ -96,9 +88,9 @@
     <None Include="ADMIN\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{d658803c-1f66-4ac0-8f2a-5a7574a7148b}</SharePointProjectItemId>
     </None>
-    <None Include="DeploymentScript\Nauplius.SharePoint.FoundationSync.ps1">
+    <Content Include="DeploymentScript\Nauplius.SharePoint.FoundationSync.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="Features\UserPhotosFeature\UserPhotosFeature.feature">
       <FeatureId>{afd1ff8d-c062-43be-8887-db640198ce57}</FeatureId>
     </None>

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using Microsoft.SharePoint.Administration;
 using System.Runtime.InteropServices;
 using Microsoft.SharePoint;
@@ -21,13 +20,15 @@ namespace Nauplius.SP.UserSync
         [Persisted] private Collection<SPSite> m_spSiteCollection;
         [Persisted] private bool m_useExchange = false;
         [Persisted] private Uri m_pictureStorageUrl = null;
-        [Persisted] private string m_ewsUrl = string.Empty;
-
+        [Persisted] private Uri m_ewsUrl = null;
+        [Persisted] private int m_pictureExpiryDays = 1;
+        [Persisted] private string m_ewsPictureSize = "648x648";
         [Persisted] private List<string> m_ignoredUsers = new List<string>()
         {
             @"NT AUTHORITY\",
             @"SHAREPOINT\",
-            "c:0(.s|true"
+            @"c:0(.s|true",
+            @"c:0!.s|windows"
         };
 
         public FoundationSyncSettings()
@@ -116,24 +117,43 @@ namespace Nauplius.SP.UserSync
             }
         }
 
-        private bool UseExchange
+        public bool UseExchange
         {
             get { return m_useExchange; }
+            set { m_useExchange = value; }
         }
 
-        private Uri PictureStorageUrl
+        public Uri PictureStorageUrl
         {
             get { return m_pictureStorageUrl; }
+            set { m_pictureStorageUrl = value; }
         }
 
-        private string EwsUrl
+        public Uri EwsUrl
         {
             get { return m_ewsUrl; }
+            set { m_ewsUrl = value; }
+        }
+
+        public int PictureExpiryDays
+        {
+            get { return m_pictureExpiryDays; }
+            set { m_pictureExpiryDays = value; }
+        }
+
+        public string EwsPictureSize
+        {
+            get { return m_ewsPictureSize; }
+            set { m_ewsPictureSize = value; }
         }
 
         internal List<string> IgnoredUsers
         {
             get { return m_ignoredUsers; }
+            set
+            {
+                m_ignoredUsers = value;
+            }
         }
     }
 }
