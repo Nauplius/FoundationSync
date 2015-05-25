@@ -22,6 +22,7 @@ namespace Nauplius.SP.UserSync
     {
         private const string tJobName = "Nauplius.SharePoint.FoundationSync";
         private static int j; //RemoveUsers method
+        private static int u; //Users updated
         private readonly bool _loggingEx = FoundationSyncSettings.Local.LoggingEx;
 
         public AttributePush()
@@ -110,6 +111,10 @@ namespace Nauplius.SP.UserSync
                     LoggingExData(string.Format("{0} user principals deleted",
                         j), LoggingEx.LoggingExType.UsersDeletedCount);
 
+                if(_loggingEx)
+                    LoggingExData(string.Format("{0} users updated", 
+                        u), LoggingEx.LoggingExType.UsersUpdatedCount);
+
                 LoggingEx.SaveReport();
             }
             catch (IndexOutOfRangeException)
@@ -181,7 +186,7 @@ namespace Nauplius.SP.UserSync
 
                             UpdateUilGroup(objPrincipal, directoryEntry, listItems, itemCount);
                         }
-                        catch (DirectoryServicesCOMException exception)
+                        catch (Exception exception)
                         {
                             FoudationSync.LogMessage(501, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                                 exception.Message + exception.StackTrace, null);
@@ -375,6 +380,7 @@ namespace Nauplius.SP.UserSync
                     FoudationSync.LogMessage(201, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                         string.Format("Updating user {0} (ID {1}) on Site Collection {2}.", item.DisplayName, item.ID, item.Web.Site.Url), null);
                     item.Update();
+                    ++u;
                     return;
                 }
             }
