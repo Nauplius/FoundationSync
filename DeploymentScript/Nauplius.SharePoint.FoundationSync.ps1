@@ -26,7 +26,7 @@ switch ($optChoice)
 	1 {Write-Host -ForegroundColor White "Exiting Installation."; return}
 }
 
-Add-PSSnapin Microsoft.SharePoint.PowerShell -EA Stop
+Add-PSSnapin Microsoft.SharePoint.PowerShell -EA 0
 
 function CheckForExistingSolution([string]$solutionName)
 {
