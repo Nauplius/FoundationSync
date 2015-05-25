@@ -22,6 +22,7 @@ namespace Nauplius.SP.UserSync
     {
         private const string tJobName = "Nauplius.SharePoint.FoundationSync";
         private static int j; //RemoveUsers method
+        private static int u; //Users updated
         private readonly bool _loggingEx = FoundationSyncSettings.Local.LoggingEx;
 
         public AttributePush()
@@ -109,6 +110,10 @@ namespace Nauplius.SP.UserSync
                 if (_loggingEx)
                     LoggingExData(string.Format("{0} user principals deleted",
                         j), LoggingEx.LoggingExType.UsersDeletedCount);
+
+                if (_loggingEx)
+                    LoggingExData(string.Format("{0} users updated",
+                        u), LoggingEx.LoggingExType.UsersUpdatedCount);
 
                 LoggingEx.SaveReport();
             }
