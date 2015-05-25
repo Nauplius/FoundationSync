@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Nauplius.SP.UserSync.Layouts.Nauplius.SharePoint.FoundationSync {
+namespace Nauplius.SP.UserSync.ADMIN.FoundationSync {
     
     
     public partial class ProfileSettings {
@@ -29,6 +29,15 @@ namespace Nauplius.SP.UserSync.Layouts.Nauplius.SharePoint.FoundationSync {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnCancelTop;
+        
+        /// <summary>
+        /// InputFormSection1 control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.UserControl InputFormSection1;
         
         /// <summary>
         /// tBox1 control.
@@ -56,6 +65,15 @@ namespace Nauplius.SP.UserSync.Layouts.Nauplius.SharePoint.FoundationSync {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::Microsoft.SharePoint.WebControls.InputFormRequiredFieldValidator v2;
+        
+        /// <summary>
+        /// InputFormSection2 control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.UserControl InputFormSection2;
         
         /// <summary>
         /// tBox2 control.
