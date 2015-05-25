@@ -168,10 +168,10 @@ namespace Nauplius.SP.UserSync
                         stream.Flush();                        
                     }
 
-                    _userPropertiesMemoryStream.Dispose();
-                    _usersDeletedMemoryStream.Dispose();
-                    _usersFoundMemoryStream.Dispose();
-                    _usersUpdatedMemoryStream.Dispose();
+                    _userPropertiesMemoryStream.Clear();
+                    _usersDeletedMemoryStream.Clear();
+                    _usersFoundMemoryStream.Clear();
+                    _usersUpdatedMemoryStream.Clear();
 
                     file.SaveBinary(stream);
                     file.Update();
@@ -189,6 +189,17 @@ namespace Nauplius.SP.UserSync
             UsersDeletedCount,
             UsersUpdatedCount,
             UserProperties
+        }
+    }
+
+    public static class ExtensionMethod
+    {
+        public static void Clear(this MemoryStream source)
+        {
+            var buffer = source.GetBuffer();
+            Array.Clear(buffer, 0, buffer.Length);
+            source.Position = 0;
+            source.SetLength(0);
         }
     }
 }

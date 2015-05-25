@@ -112,7 +112,7 @@ namespace Nauplius.SP.UserSync
                         j), LoggingEx.LoggingExType.UsersDeletedCount);
 
                 if(_loggingEx)
-                    LoggingExData(string.Format("{0} users updated", 
+                    LoggingExData(string.Format("{0} users and groups updated", 
                         u), LoggingEx.LoggingExType.UsersUpdatedCount);
 
                 LoggingEx.SaveReport();
@@ -297,6 +297,7 @@ namespace Nauplius.SP.UserSync
                     FoudationSync.LogMessage(200, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                         string.Format("Updating group {0} (ID {1}) on Site Collection {2}.", item.DisplayName, item.ID, item.Web.Site.Url), null);
                     item.Update();
+                    ++u;
                     return;
                 }
             }
@@ -394,6 +395,7 @@ namespace Nauplius.SP.UserSync
         private static string GetThumbnail(SPUser user, DirectoryEntry directoryEntry)
         {
             var siteUri = FoundationSyncSettings.Local.PictureStorageUrl;
+            if (siteUri == null) return null;
             if (string.IsNullOrEmpty(siteUri.AbsoluteUri)) return null;
 
             var fileUri = string.Empty;
