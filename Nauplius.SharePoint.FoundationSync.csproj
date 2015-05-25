@@ -80,6 +80,7 @@
     <None Include="ADMIN\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{31e0493e-73e1-471a-94e9-cf3490e908cf}</SharePointProjectItemId>
     </None>
+    <None Include="DeploymentScript\Nauplius.SharePoint.FoundationSync.ps1" />
     <None Include="Features\UserPhotosFeature\UserPhotosFeature.feature">
       <FeatureId>{489c0cad-4514-4fae-9d31-261b2ba889e8}</FeatureId>
     </None>
