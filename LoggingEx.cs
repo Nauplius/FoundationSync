@@ -188,7 +188,13 @@ namespace Nauplius.SP.UserSync
             UsersFoundCount,
             UsersDeletedCount,
             UsersUpdatedCount,
-            UserProperties
+            UserProperties,
+            UserName,
+            GroupName,
+            Properties,
+            IsActive,
+            IsDeleted,
+            RemovedFromSite
         }
     }
     public static class ExtensionMethod
