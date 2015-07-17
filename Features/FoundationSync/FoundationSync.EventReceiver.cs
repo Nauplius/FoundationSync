@@ -22,32 +22,41 @@ namespace Nauplius.SP.UserSync.Features.UserSync
         {
             var farm = SPFarm.Local;
 
-            var services = from s in farm.Services
-                           where s.Name == "SPTimerV4"
-                           select s;
+            SyncService syncService = null;
 
-            var service = services.First();
-
-            foreach (var job in service.JobDefinitions.Where(job => job.Name == tJobName))
+            foreach (var service in farm.Services)
             {
-                job.Delete();
-            }
-
-            var schedule = new SPDailySchedule {BeginHour = 0, EndHour = 4};
-
-            try
-            {
-                if (!string.IsNullOrEmpty(farm.Properties.ContainsKey("FoundationSyncPreferredServer").ToString()))
+                if (String.Compare(service.Name, SyncService.FoundationSync, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    var server = farm.Servers[farm.Properties["FoundationSyncPreferredServer"].ToString()];
-                    var timerJob = new SyncJob(tJobName, service, server, SPJobLockType.Job) { Schedule = schedule };
+                    syncService = (service as SyncService);
+                    break;
+                }
+
+                if (syncService != null) continue;
+                syncService = new SyncService(farm);
+                syncService.Update();
+                
+                SyncInstance syncInstance;
+
+                foreach (var server in farm.Servers)
+                {
+                    syncInstance = new SyncInstance(server, syncService);
+                    syncInstance.Update();
+                }
+
+                var schedule = new SPDailySchedule {BeginHour = 0, EndHour = 4};
+
+                try
+                {
+                    var timerJob = new SyncJob(syncService, null, SPJobLockType.Job) {Schedule = schedule};
                     timerJob.Update();
                 }
-            }
-            catch (NullReferenceException)
-            {
-                var timerJob = new SyncJob(tJobName, service) { Schedule = schedule };
-                timerJob.Update();     
+                catch (NullReferenceException)
+                {
+                    var timerJob = new SyncJob(tJobName, service) {Schedule = schedule};
+                    timerJob.Update();
+
+                }
             }
 
             RegisterLogging(properties, true);
@@ -76,6 +85,8 @@ namespace Nauplius.SP.UserSync.Features.UserSync
         public override void FeatureUninstalling(SPFeatureReceiverProperties properties)
         {
             DeleteJob();
+            DeleteServiceInstance();
+            DeleteService();
 
             RegisterLogging(properties, false);
 
@@ -109,6 +120,24 @@ namespace Nauplius.SP.UserSync.Features.UserSync
             {
                 job.Delete();
             }
+        }
+
+        private static void DeleteService()
+        {
+            var local = SPFarm.Local;
+
+            var service = local.Services.Where(s => s.Name == "Foundation Synchronization Service");
+            var svc = service.First();
+            svc.Delete();
+        }
+
+        private static void DeleteServiceInstance()
+        {
+            var local = SPFarm.Local;
+
+            var serviceInstances = local.Services.Select(s => s.Instances["Foundation Synchronization Service Instance"]);
+            var si = serviceInstances.First();
+            si.Delete();
         }
 
         private static void RegisterLogging(SPFeatureReceiverProperties properties, bool register)

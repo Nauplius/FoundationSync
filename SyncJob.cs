@@ -30,6 +30,10 @@ namespace Nauplius.SP.UserSync
         {
         }
 
+
+        public SyncJob(SPService service, SPServer server, SPJobLockType lockType)
+            : base(tJobName, service, server, lockType) { }
+
         public SyncJob(String name, SPService service, SPServer server, SPJobLockType lockType)
             : base(name, service, server, SPJobLockType.Job)
         {

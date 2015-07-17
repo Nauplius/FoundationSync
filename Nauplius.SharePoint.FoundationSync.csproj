@@ -83,7 +83,9 @@
     <Compile Include="LoggingEx.cs" />
     <Compile Include="PrincipalHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SyncInstance.cs" />
     <Compile Include="SyncJob.cs" />
+    <Compile Include="SyncService.cs" />
     <Compile Include="ThumbnailHandler.cs" />
     <Compile Include="UpdateGroup.cs" />
     <Compile Include="UpdateUser.cs" />
