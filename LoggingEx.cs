@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace Nauplius.SP.UserSync
 {
@@ -61,6 +64,23 @@ namespace Nauplius.SP.UserSync
                     "Unable to create Report Storage in Central Administration for" +
                     " FoundationSyncSetting object. " + e.StackTrace, null);
             }
+        }
+
+        internal static void CreateReportXlsx(Sheet sheet)
+        {
+            var stream = new MemoryStream();
+
+            var document = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook, false);
+            var workbookPart = document.AddWorkbookPart();
+            workbookPart.Workbook = new Workbook();
+            var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            worksheetPart.Worksheet = new Worksheet(new SheetData());
+
+            var sheets = document.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
+            var sheet1 = new Sheet() {Id = document.WorkbookPart.GetIdOfPart(workbookPart), SheetId = 1, Name = "test"};
+            sheets.Append(sheet1);
+            workbookPart.Workbook.Save(stream);
+            document.Close();
         }
 
         internal static void BuildReport(string logMessage, LoggingExType logType)

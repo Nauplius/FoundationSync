@@ -22,25 +22,25 @@ namespace Nauplius.SP.UserSync.Features.UserSync
         {
             var farm = SPFarm.Local;
 
-            SyncService syncService = null;
+            SyncServiceApplication syncService = null;
 
             foreach (var service in farm.Services)
             {
-                if (String.Compare(service.Name, SyncService.FoundationSync, StringComparison.OrdinalIgnoreCase) == 0)
+                if (String.Compare(service.Name, SyncServiceApplication.FoundationSync, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    syncService = (service as SyncService);
+                    syncService = (service as SyncServiceApplication);
                     break;
                 }
 
                 if (syncService != null) continue;
-                syncService = new SyncService(farm);
+                syncService = new SyncServiceApplication(farm);
                 syncService.Update();
                 
-                SyncInstance syncInstance;
+                SyncServiceInstance syncInstance;
 
                 foreach (var server in farm.Servers)
                 {
-                    syncInstance = new SyncInstance(server, syncService);
+                    syncInstance = new SyncServiceInstance(server, syncService);
                     syncInstance.Update();
                 }
 
@@ -48,7 +48,7 @@ namespace Nauplius.SP.UserSync.Features.UserSync
 
                 try
                 {
-                    var timerJob = new SyncJob(syncService, null, SPJobLockType.Job) {Schedule = schedule};
+                    var timerJob = new SyncJob(syncService, null, SPJobLockType.None) {Schedule = schedule};
                     timerJob.Update();
                 }
                 catch (NullReferenceException)

@@ -31,6 +31,7 @@ namespace Nauplius.SP.UserSync
             @"c:0!.s|windows"
         };
         [Persisted] private Dictionary<string, string> m_additionalUserAttributes = new Dictionary<string, string>(); //UIL Property (Key), LDAP Attribute (Value)
+        [Persisted] private string m_connectionString;
 
         public FoundationSyncSettings()
         { }
@@ -161,6 +162,12 @@ namespace Nauplius.SP.UserSync
         {
             get { return m_additionalUserAttributes; }
             set { m_additionalUserAttributes = value; }
+        }
+
+        public string ConnectionString
+        {
+            get { return m_connectionString; }
+            set { m_connectionString = value; }
         }
     }
 }

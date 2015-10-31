@@ -1,17 +1,7 @@
-﻿using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Net;
-using System.Security.Cryptography;
-using System.Security.Principal;
-using System.Text;
-using Microsoft.SharePoint;
+﻿using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
-using Microsoft.SharePoint.Administration.Claims;
 using System;
 using System.Collections.Generic;
-using System.DirectoryServices;
-using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -20,7 +10,7 @@ namespace Nauplius.SP.UserSync
     [Guid("CA9D049C-D23F-4C1C-A1D5-5CD43EA87D03")]
     public class SyncJob : SPJobDefinition
     {
-        private const string tJobName = "Nauplius.SharePoint.FoundationSync";
+        private const string tJobName = "FoundationSync to Sites";
         private static int j; //RemoveUsers method
         private static int u; //Users updated
         private readonly bool _loggingEx = FoundationSyncSettings.Local.LoggingEx;
@@ -29,7 +19,6 @@ namespace Nauplius.SP.UserSync
             : base()
         {
         }
-
 
         public SyncJob(SPService service, SPServer server, SPJobLockType lockType)
             : base(tJobName, service, server, lockType) { }
@@ -42,7 +31,6 @@ namespace Nauplius.SP.UserSync
         public SyncJob(String name, SPService service)
             : base(name, service, null, SPJobLockType.Job)
         {
-            Title = tJobName;
         }
 
         public override void Execute(Guid targetInstanceId)

@@ -29,6 +29,7 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <OldToolsVersion>4.0</OldToolsVersion>
+    <WcfConfigValidationEnabled>True</WcfConfigValidationEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -56,12 +57,21 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\DocumentFormat.OpenXml.2.5\lib\DocumentFormat.OpenXml.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="Microsoft.SharePoint" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Features\FoundationSync\FoundationSync.EventReceiver.cs">
@@ -79,13 +89,15 @@
     </Compile>
     <Compile Include="FoundationSyncSettings.cs" />
     <Compile Include="FoundationSyncStorage.cs" />
+    <Compile Include="LdapSearcher.cs" />
     <Compile Include="Logging.cs" />
     <Compile Include="LoggingEx.cs" />
     <Compile Include="PrincipalHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SyncInstance.cs" />
+    <Compile Include="SqlQueries.cs" />
+    <Compile Include="SyncServiceInstance.cs" />
     <Compile Include="SyncJob.cs" />
-    <Compile Include="SyncService.cs" />
+    <Compile Include="SyncFromAD.cs" />
     <Compile Include="ThumbnailHandler.cs" />
     <Compile Include="UpdateGroup.cs" />
     <Compile Include="UpdateUser.cs" />
@@ -94,9 +106,11 @@
     <None Include="ADMIN\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{d658803c-1f66-4ac0-8f2a-5a7574a7148b}</SharePointProjectItemId>
     </None>
+    <Content Include="DeploymentScript\FoundationSync.sql" />
     <Content Include="DeploymentScript\Nauplius.SharePoint.FoundationSync.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="app.config" />
     <None Include="Features\UserPhotosFeature\UserPhotosFeature.feature">
       <FeatureId>{afd1ff8d-c062-43be-8887-db640198ce57}</FeatureId>
     </None>
@@ -107,6 +121,7 @@
       <SharePointProjectItemId>{31f7d3ac-0d00-4980-9d74-a54decb99b1f}</SharePointProjectItemId>
     </None>
     <None Include="key.snk" />
+    <None Include="packages.config" />
     <None Include="Package\Package.package">
       <PackageId>{1edb5daf-566f-4239-9a65-4dfc51d0fcaa}</PackageId>
     </None>
