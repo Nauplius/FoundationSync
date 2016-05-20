@@ -20,9 +20,12 @@ namespace Nauplius.SP.UserSync
         {
         }
 
+<<<<<<< HEAD
         public SyncJob(SPService service, SPServer server, SPJobLockType lockType)
             : base(tJobName, service, server, lockType) { }
 
+=======
+>>>>>>> parent of d3145bf... 2013: Add Service Instance features. Remove PropertyBag functionality for targeting a specific SPServer.
         public SyncJob(String name, SPService service, SPServer server, SPJobLockType lockType)
             : base(name, service, server, SPJobLockType.Job)
         {

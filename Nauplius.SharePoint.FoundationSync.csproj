@@ -94,10 +94,14 @@
     <Compile Include="LoggingEx.cs" />
     <Compile Include="PrincipalHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+<<<<<<< HEAD
     <Compile Include="SqlQueries.cs" />
     <Compile Include="SyncServiceInstance.cs" />
     <Compile Include="SyncJob.cs" />
     <Compile Include="SyncFromAD.cs" />
+=======
+    <Compile Include="SyncJob.cs" />
+>>>>>>> parent of d3145bf... 2013: Add Service Instance features. Remove PropertyBag functionality for targeting a specific SPServer.
     <Compile Include="ThumbnailHandler.cs" />
     <Compile Include="UpdateGroup.cs" />
     <Compile Include="UpdateUser.cs" />
