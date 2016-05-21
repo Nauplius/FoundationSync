@@ -30,7 +30,7 @@ namespace Nauplius.SP.UserSync
                         ? string.Empty
                         : directoryEntry.Properties["mail"].Value.ToString();
 
-                    if (item["EMail"].ToString() != eMail)
+                    if (item["EMail"] != eMail)
                     {
                         item["Email"] = eMail;
                         shouldUpdate = true;
@@ -49,7 +49,7 @@ namespace Nauplius.SP.UserSync
                             {
                                 var sipAddress = o.Remove(0, 4);
 
-                                if (item["SipAddress"].ToString() != sipAddress)
+                                if (item["SipAddress"] != sipAddress)
                                 {
                                     item["SipAddress"] = sipAddress;
                                     shouldUpdate = true;
@@ -63,7 +63,7 @@ namespace Nauplius.SP.UserSync
                         {
                             var sipAddress = directoryEntry.Properties["proxyAddresses"].Value.ToString().Remove(0, 4);
 
-                            if (item["SipAddress"].ToString() != sipAddress)
+                            if (item["SipAddress"] != sipAddress)
                             {
                                 item["SipAddress"] = sipAddress;
                                 shouldUpdate = true;

@@ -119,13 +119,20 @@ namespace Nauplius.SP.UserSync
 
                             if (result == null)
                             {
-                                RemoveUsers(objPrincipal, site.Url, j);
+                                if (FoundationSyncSettings.Local.DeleteUsers)
+                                {
+                                    RemoveUsers(objPrincipal, site.Url, j);
+  
+                                }
                                 continue;
-                            }
+                            }   
 
-                            if (IsActive(result.GetDirectoryEntry()))
+                            if (!IsActive(result.GetDirectoryEntry()))
                             {
-                                RemoveUsers(objPrincipal, site.Url, j);
+                                if (FoundationSyncSettings.Local.DeleteDisabledUsers)
+                                {
+                                    RemoveUsers(objPrincipal, site.Url, j);
+                                }
                                 continue;
                             }
 
@@ -167,18 +174,24 @@ namespace Nauplius.SP.UserSync
         {
             if (de == null) return false;
             if (de.NativeGuid == null) return false;
+            var status = true;
 
-            var flags = (int)de.Properties["userAccountControl"].Value;
-            var status = Convert.ToBoolean(flags & 0x0002);
+            try
+            {
+                var flags = (int)de.Properties["userAccountControl"].Value;
+                status = !Convert.ToBoolean(flags & 0x0002);
+            }
+            catch (Exception e)
+            {
+                FoudationSync.LogMessage(505, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                    string.Format("Unexpected exception attempting to determine if user is active: User: {0}. Status value: {1}. {2}", de.Username ,status, e.StackTrace), null);
+            }
 
             return status;
         }
 
         private static void RemoveUsers(SPUser objPrincipal, string siteUrl, int j)
         {
-            if (!FoundationSyncSettings.Local.DeleteUsers && !FoundationSyncSettings.Local.DeleteDisabledUsers)
-                return;
-
             using (SPSite site = new SPSite(siteUrl))
             {
                 using (SPWeb web = site.OpenWeb())

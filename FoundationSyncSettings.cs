@@ -26,6 +26,7 @@ namespace Nauplius.SP.UserSync
         [Persisted] private List<string> m_ignoredUsers = new List<string>()
         {
             @"NT AUTHORITY\",
+            @"BUILTIN\",
             @"SHAREPOINT\",
             @"c:0(.s|true",
             @"c:0!.s|windows"

@@ -87,6 +87,7 @@ namespace Nauplius.SP.UserSync
  *  501, 502 (StackTrace only) //Unexpected, incorrect, ToDo: should be 400
  *  503 (StackTrace only)
  *  504: Unable to read FoundationSyncSetting object.
+ *  505: IsActive returned an error (?)
  * 601 (?? ToDo: Merge with new Medium category)
  * 701 (?? Unexpected, ToDo: move to 400)
  * UI Errors:

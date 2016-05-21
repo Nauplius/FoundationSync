@@ -23,13 +23,13 @@ namespace Nauplius.SP.UserSync
 
                     var item = listItems[j];
 
-                    if (!String.Equals(item["Name"].ToString(), user.LoginName, StringComparison.CurrentCultureIgnoreCase)) continue;
+                    if (!string.Equals(item["Name"].ToString(), user.LoginName, StringComparison.CurrentCultureIgnoreCase)) continue;
 
                     var title = (directoryEntry.Properties["displayName"].Value == null)
                                         ? string.Empty
                                         : directoryEntry.Properties["displayName"].Value.ToString();
 
-                    if (item["Title"].ToString() != title)
+                    if (item["Title"] != title)
                     {
                         item["Title"] = title;
                         shouldUpdate = true;
@@ -39,43 +39,77 @@ namespace Nauplius.SP.UserSync
                                         ? string.Empty
                                         : directoryEntry.Properties["mail"].Value.ToString();
 
-                    if (item["EMail"].ToString() != eMail)
+                    try
                     {
-                        item["EMail"] = eMail;
-                        shouldUpdate = true;
+                        if (item["EMail"] != eMail)
+                        {
+                            item["EMail"] = eMail;
+                            shouldUpdate = true;
+                        }
                     }
+                    catch (Exception)
+                    {
+                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                            string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "Email", item.DisplayName, item.ID, item.Web.Site.Url), null);
+                    }
+
 
                     var jobTitle = (directoryEntry.Properties["title"].Value == null)
                                            ? string.Empty
                                            : directoryEntry.Properties["title"].Value.ToString();
 
-                    if (item["JobTitle"].ToString() != jobTitle)
+                    try
                     {
-                        item["JobTitle"] = jobTitle;
-                        shouldUpdate = true;
+                        if (item["JobTitle"] != jobTitle)
+                        {
+                            item["JobTitle"] = jobTitle;
+                            shouldUpdate = true;
+                        }
                     }
+                    catch (Exception)
+                    {
+                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                           string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "JobTitle", item.DisplayName, item.ID, item.Web.Site.Url), null);                       
+                    }
+
 
                     var mobilePhone = (directoryEntry.Properties["mobile"].Value == null)
                                               ? string.Empty
                                               : directoryEntry.Properties["mobile"].Value.ToString();
 
-                    if (item["MobilePhone"].ToString() != mobilePhone)
+                    try
                     {
-                        item["MobilePhone"] = mobilePhone;
-                        shouldUpdate = true;
+                        if (item["MobilePhone"] != mobilePhone)
+                        {
+                            item["MobilePhone"] = mobilePhone;
+                            shouldUpdate = true;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                           string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "MobilePhone", item.DisplayName, item.ID, item.Web.Site.Url), null);     
                     }
 
                     if (user.SystemUserKey != null)
                     {
                         var uri = ThumbnailHandler.GetThumbnail(user, directoryEntry);
 
-                        if (!string.IsNullOrEmpty(uri))
+                        try
                         {
-                            item["Picture"] = uri;
+                            if (!string.IsNullOrEmpty(uri))
+                            {
+                                item["Picture"] = uri;
+                            }
+                            else if (string.IsNullOrEmpty(uri))
+                            {
+                                item["Picture"] = string.Empty;
+                            }                       
                         }
-                        else if (string.IsNullOrEmpty(uri))
+                        catch (Exception)
                         {
-                            item["Picture"] = string.Empty;
+                            FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                                string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "Picture", item.DisplayName, item.ID, item.Web.Site.Url), null);                              
                         }
                     }
 
@@ -90,11 +124,18 @@ namespace Nauplius.SP.UserSync
                                               select o)
                             {
                                 var sipAddress = o.Remove(0, 4);
-
-                                if (item["SipAddress"].ToString() != sipAddress)
+                                try
                                 {
-                                    item["SipAddress"] = sipAddress;
-                                    shouldUpdate = true;
+                                    if (item["SipAddress"] != sipAddress)
+                                    {
+                                        item["SipAddress"] = sipAddress;
+                                        shouldUpdate = true;
+                                    }
+                                }
+                                catch (Exception)
+                                {
+                                    FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                                        string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "SipAddress", item.DisplayName, item.ID, item.Web.Site.Url), null);                                    
                                 }
                             }
                         }
@@ -105,16 +146,32 @@ namespace Nauplius.SP.UserSync
                         {
                             var sipAddress = directoryEntry.Properties["proxyAddresses"].Value.ToString().Remove(0, 4);
 
-                            if (item["SipAddress"].ToString() != sipAddress)
+                            try
                             {
-                                item["SipAddress"] = sipAddress;
-                                shouldUpdate = true;
+                                if (item["SipAddress"] != sipAddress)
+                                {
+                                    item["SipAddress"] = sipAddress;
+                                    shouldUpdate = true;
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                                    string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "SipAddress", item.DisplayName, item.ID, item.Web.Site.Url), null);
                             }
 
                         }
                         else
                         {
-                            item["SipAddress"] = string.Empty;
+                            try
+                            {
+                                item["SipAddress"] = string.Empty;
+                            }
+                            catch (Exception)
+                            {
+                                FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                                    string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "SipAddress", item.DisplayName, item.ID, item.Web.Site.Url), null);
+                            }
                         }
                     }
 
@@ -122,10 +179,18 @@ namespace Nauplius.SP.UserSync
                                              ? string.Empty
                                              : directoryEntry.Properties["department"].Value.ToString();
 
-                    if (item["Department"].ToString() != department)
+                    try
                     {
-                        item["Department"] = department;
-                        shouldUpdate = true;
+                        if (item["Department"] != department)
+                        {
+                            item["Department"] = department;
+                            shouldUpdate = true;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                            string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "Department", item.DisplayName, item.ID, item.Web.Site.Url), null);
                     }
 
                     try
@@ -138,16 +203,15 @@ namespace Nauplius.SP.UserSync
                                                    ? string.Empty
                                                    : directoryEntry.Properties[ldapAttribute.Value].Value.ToString();
 
-                            if (item[ldapAttribute.Key].ToString() != value)
-                            {
-                                item[ldapAttribute.Key] = value;
-                                shouldUpdate = true;
-                            }
+                            if (item[ldapAttribute.Key] == value) continue;
+                            item[ldapAttribute.Key] = value;
+                            shouldUpdate = true;
                         }
                     }
                     catch (Exception)
                     {
-                        //ToDo: Log exception -- e.g., 'should check existing LDAP attrib, UIL key, AdditionalAttributes key:value pair(s)
+                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                            string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "AdditionalAttribues Value", item.DisplayName, item.ID, item.Web.Site.Url), null);
                     }
 
                     if (shouldUpdate)

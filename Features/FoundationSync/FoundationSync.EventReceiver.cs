@@ -22,29 +22,6 @@ namespace Nauplius.SP.UserSync.Features.UserSync
         {
             var farm = SPFarm.Local;
 
-<<<<<<< HEAD
-            SyncServiceApplication syncService = null;
-
-            foreach (var service in farm.Services)
-            {
-                if (String.Compare(service.Name, SyncServiceApplication.FoundationSync, StringComparison.OrdinalIgnoreCase) == 0)
-                {
-                    syncService = (service as SyncServiceApplication);
-                    break;
-                }
-
-                if (syncService != null) continue;
-                syncService = new SyncServiceApplication(farm);
-                syncService.Update();
-                
-                SyncServiceInstance syncInstance;
-
-                foreach (var server in farm.Servers)
-                {
-                    syncInstance = new SyncServiceInstance(server, syncService);
-                    syncInstance.Update();
-                }
-=======
             var services = from s in farm.Services
                            where s.Name == "SPTimerV4"
                            select s;
@@ -55,22 +32,12 @@ namespace Nauplius.SP.UserSync.Features.UserSync
             {
                 job.Delete();
             }
->>>>>>> parent of d3145bf... 2013: Add Service Instance features. Remove PropertyBag functionality for targeting a specific SPServer.
 
-            var schedule = new SPDailySchedule {BeginHour = 0, EndHour = 4};
+            var schedule = new SPDailySchedule { BeginHour = 0, EndHour = 4 };
 
-<<<<<<< HEAD
-                try
-                {
-                    var timerJob = new SyncJob(syncService, null, SPJobLockType.None) {Schedule = schedule};
-                    timerJob.Update();
-                }
-                catch (NullReferenceException)
-=======
             try
             {
                 if (!string.IsNullOrEmpty(farm.Properties.ContainsKey("FoundationSyncPreferredServer").ToString()))
->>>>>>> parent of d3145bf... 2013: Add Service Instance features. Remove PropertyBag functionality for targeting a specific SPServer.
                 {
                     var server = farm.Servers[farm.Properties["FoundationSyncPreferredServer"].ToString()];
                     var timerJob = new SyncJob(tJobName, service, server, SPJobLockType.Job) { Schedule = schedule };
@@ -80,7 +47,7 @@ namespace Nauplius.SP.UserSync.Features.UserSync
             catch (NullReferenceException)
             {
                 var timerJob = new SyncJob(tJobName, service) { Schedule = schedule };
-                timerJob.Update();     
+                timerJob.Update();
             }
 
             RegisterLogging(properties, true);
