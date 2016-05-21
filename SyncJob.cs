@@ -101,8 +101,7 @@ namespace Nauplius.SP.UserSync
                         FoudationSync.LogMessage(101, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} group principals in site {1}", groupAccounts.Count, site.Url), null);
 
-                        PrincipalHandler.SearchPrincipals(userAccounts, webApplication, site, false, j, u);
-
+                        PrincipalHandler.SearchPrincipals(groupAccounts, webApplication, site, true, j, u);
                         groupAccounts.Clear();
 
                         site.Dispose();
