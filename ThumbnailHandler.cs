@@ -90,7 +90,7 @@ namespace Nauplius.SP.UserSync
             catch (Exception)
             {
                 FoudationSync.LogMessage(2001, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
-                    string.Format("Error retriving file, continuing to pull new file."), null);
+                    string.Format("Error retrieving picture file from UserPhotos library, continuing to pull new picture."), null);
             }
 
             if (FoundationSyncSettings.Local.UseExchange)
@@ -195,7 +195,7 @@ namespace Nauplius.SP.UserSync
             }
             catch (Exception exception)
             {
-                FoudationSync.LogMessage(701, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                FoudationSync.LogMessage(405, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                     exception.Message + exception.StackTrace, null);
             }
 

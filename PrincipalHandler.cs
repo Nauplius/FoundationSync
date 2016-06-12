@@ -75,7 +75,7 @@ namespace Nauplius.SP.UserSync
                         }
                         catch (DirectoryServicesCOMException exception)
                         {
-                            FoudationSync.LogMessage(501, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                            FoudationSync.LogMessage(403, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                                 exception.Message + exception.StackTrace, null);
                         }
                     }
@@ -141,7 +141,7 @@ namespace Nauplius.SP.UserSync
                         }
                         catch (DirectoryServicesCOMException exception)
                         {
-                            FoudationSync.LogMessage(502, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                            FoudationSync.LogMessage(404, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                                 exception.Message + exception.StackTrace, null);
                         }
                     }
@@ -162,7 +162,7 @@ namespace Nauplius.SP.UserSync
             }
             catch (Exception e)
             {
-                FoudationSync.LogMessage(500, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                FoudationSync.LogMessage(410, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                     string.Format("Unexpected exception attempting to retrieve domain name: {0}. {1}", domainName, e.StackTrace), null);
                 return null;
             }
@@ -204,9 +204,10 @@ namespace Nauplius.SP.UserSync
                         web.SiteUsers.Remove(user.LoginName);
                         ++j;
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
-                        //ToDo: Error Logging
+                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                            string.Format("Unexpected exception attempting to remove user: User: {0} (ID: {1}). Url: {2}. {3}", objPrincipal.LoginName, objPrincipal.ID, siteUrl, e.StackTrace), null);
                     }
                 }
             }

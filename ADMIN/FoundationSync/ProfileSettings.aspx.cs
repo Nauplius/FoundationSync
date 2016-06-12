@@ -34,7 +34,6 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             else
             {
                 FoundationSyncSettings.Local.UseExchange = false;
-                FoundationSyncSettings.Local.Update();
                 FoundationSyncSettings.Local.EwsUrl = null;
                 FoundationSyncSettings.Local.Update();
             }
@@ -53,8 +52,6 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
                 v2.IsValid = false;
                 return;
             }
-            FoundationSyncSettings.Local.PictureStorageUrl = null;
-            FoundationSyncSettings.Local.Update();
 
             var tbox1Uri = new Uri(tBox1.Text + "/UserPhotos");
             FoundationSyncSettings.Local.PictureStorageUrl = tbox1Uri;
@@ -63,19 +60,29 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
 
         internal void ValidateExchangeConnection()
         {
-            var uriBuilder = new UriBuilder(tBox2.Text);
 
-            try
+            if (!Uri.IsWellFormedUriString(tBox2.Text, UriKind.Absolute))
             {
-                FoundationSyncSettings.Local.UseExchange = true;
+                FoundationSyncSettings.Local.UseExchange = false;
+                FoundationSyncSettings.Local.EwsUrl = null;
                 FoundationSyncSettings.Local.Update();
-                FoundationSyncSettings.Local.EwsUrl = uriBuilder.Uri;
-                FoundationSyncSettings.Local.Update();
+
             }
-            catch (Exception ex)
+            else
             {
-                FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                    string.Format("Unable to set UseExchange or EwsUrl values with error {0}.", ex.InnerException), null);
+                try
+                {
+                    FoundationSyncSettings.Local.UseExchange = true;
+
+                    var tbox2Uri = new Uri(tBox2.Text);
+                    FoundationSyncSettings.Local.EwsUrl = tbox2Uri;
+                    FoundationSyncSettings.Local.Update();
+                }
+                catch (Exception ex)
+                {
+                    FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                        string.Format("Unable to set UseExchange or EwsUrl values with error {0}.", ex.InnerException), null);
+                }                
             }
         }
 
@@ -98,7 +105,7 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             {
                 if (FoundationSyncSettings.Local.PictureStorageUrl != null)
                 {
-                     var uri = FoundationSyncSettings.Local.PictureStorageUrl.AbsoluteUri;
+                    var uri = FoundationSyncSettings.Local.PictureStorageUrl.AbsoluteUri;
 
                     if(uri.EndsWith("/UserPhotos"))
                     {

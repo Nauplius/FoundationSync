@@ -29,10 +29,14 @@ namespace Nauplius.SP.UserSync
                                         ? string.Empty
                                         : directoryEntry.Properties["displayName"].Value.ToString();
 
-                    if (item["Title"] != title)
+                    try
                     {
-                        item["Title"] = title;
-                        shouldUpdate = true;
+                        shouldUpdate = TryUpdateValue(item, "Title", (string)item["Title"], title);
+                    }
+                    catch (Exception e)
+                    {
+                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                            string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "Title", item.DisplayName, item.ID, item.Web.Site.Url), null);                        
                     }
 
                     var eMail = (directoryEntry.Properties["mail"].Value == null)
@@ -41,16 +45,12 @@ namespace Nauplius.SP.UserSync
 
                     try
                     {
-                        if (item["EMail"] != eMail)
-                        {
-                            item["EMail"] = eMail;
-                            shouldUpdate = true;
-                        }
+                        shouldUpdate = TryUpdateValue(item, "EMail", (string)item["EMail"], eMail);
                     }
                     catch (Exception)
                     {
                         FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                            string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "Email", item.DisplayName, item.ID, item.Web.Site.Url), null);
+                            string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "EMail", item.DisplayName, item.ID, item.Web.Site.Url), null);
                     }
 
 
@@ -60,11 +60,7 @@ namespace Nauplius.SP.UserSync
 
                     try
                     {
-                        if (item["JobTitle"] != jobTitle)
-                        {
-                            item["JobTitle"] = jobTitle;
-                            shouldUpdate = true;
-                        }
+                        shouldUpdate = TryUpdateValue(item, "JobTitle", (string)item["JobTitle"], jobTitle);
                     }
                     catch (Exception)
                     {
@@ -76,14 +72,9 @@ namespace Nauplius.SP.UserSync
                     var mobilePhone = (directoryEntry.Properties["mobile"].Value == null)
                                               ? string.Empty
                                               : directoryEntry.Properties["mobile"].Value.ToString();
-
                     try
                     {
-                        if (item["MobilePhone"] != mobilePhone)
-                        {
-                            item["MobilePhone"] = mobilePhone;
-                            shouldUpdate = true;
-                        }
+                        shouldUpdate = TryUpdateValue(item, "MobilePhone", (string) item["MobilePhone"], mobilePhone);
                     }
                     catch (Exception)
                     {
@@ -124,13 +115,11 @@ namespace Nauplius.SP.UserSync
                                               select o)
                             {
                                 var sipAddress = o.Remove(0, 4);
+
                                 try
                                 {
-                                    if (item["SipAddress"] != sipAddress)
-                                    {
-                                        item["SipAddress"] = sipAddress;
-                                        shouldUpdate = true;
-                                    }
+                                    shouldUpdate = TryUpdateValue(item, "SipAddress", (string) item["SipAddress"],
+                                        sipAddress);
                                 }
                                 catch (Exception)
                                 {
@@ -148,11 +137,8 @@ namespace Nauplius.SP.UserSync
 
                             try
                             {
-                                if (item["SipAddress"] != sipAddress)
-                                {
-                                    item["SipAddress"] = sipAddress;
-                                    shouldUpdate = true;
-                                }
+                                shouldUpdate = TryUpdateValue(item, "SipAddress", (string)item["SipAddress"],
+                                    sipAddress);
                             }
                             catch (Exception)
                             {
@@ -181,7 +167,8 @@ namespace Nauplius.SP.UserSync
 
                     try
                     {
-                        if (item["Department"] != department)
+                        shouldUpdate = TryUpdateValue(item, "Department", (string)item["Department"], department);
+                        if ((string)item["Department"] != department)
                         {
                             item["Department"] = department;
                             shouldUpdate = true;
@@ -203,9 +190,7 @@ namespace Nauplius.SP.UserSync
                                                    ? string.Empty
                                                    : directoryEntry.Properties[ldapAttribute.Value].Value.ToString();
 
-                            if (item[ldapAttribute.Key] == value) continue;
-                            item[ldapAttribute.Key] = value;
-                            shouldUpdate = true;
+                            shouldUpdate = TryUpdateValue(item, ldapAttribute.Key, (string)item[ldapAttribute.Key], value);
                         }
                     }
                     catch (Exception)
@@ -230,6 +215,14 @@ namespace Nauplius.SP.UserSync
                 FoudationSync.LogMessage(401, FoudationSync.LogCategories.FoundationSync,
                     TraceSeverity.Unexpected, exception.Message + " " + exception.StackTrace, null);
             }
+        }
+
+        internal static bool TryUpdateValue(SPListItem item, string itemProperty, string itemValue, string ldapValue)
+        {
+            if (string.IsNullOrEmpty(itemValue) && string.IsNullOrEmpty(ldapValue)) return false;
+            if (itemValue == ldapValue) return false;
+            item[itemProperty] = ldapValue;
+            return true;
         }
     }
 }

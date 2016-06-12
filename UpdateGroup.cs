@@ -13,7 +13,7 @@ namespace Nauplius.SP.UserSync
     {
         //Flow: Record group in report on Groups sheet (A), record any updated property (B), record overall updated (C)
         internal static void Group(SPUser group, DirectoryEntry directoryEntry,
-    SPListItemCollection listItems, int itemCount, int u)
+            SPListItemCollection listItems, int itemCount, int u)
         {
             try
             {
@@ -30,12 +30,15 @@ namespace Nauplius.SP.UserSync
                         ? string.Empty
                         : directoryEntry.Properties["mail"].Value.ToString();
 
-                    if (item["EMail"] != eMail)
+                    try
                     {
-                        item["Email"] = eMail;
-                        shouldUpdate = true;
+                        shouldUpdate = TryUpdateValue(item, "EMail", (string)item["EMail"], eMail);
                     }
-
+                    catch (Exception)
+                    {
+                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                            string.Format("Unable to update {0} for group {1} (ID {2}) on Site Collection {3}.", "EMail", item.DisplayName, item.ID, item.Web.Site.Url), null);
+                    }
 
                     try
                     {
@@ -49,10 +52,15 @@ namespace Nauplius.SP.UserSync
                             {
                                 var sipAddress = o.Remove(0, 4);
 
-                                if (item["SipAddress"] != sipAddress)
+                                try
                                 {
-                                    item["SipAddress"] = sipAddress;
-                                    shouldUpdate = true;
+                                    shouldUpdate = TryUpdateValue(item, "SipAddress", (string)item["SipAddress"],
+                                        sipAddress);
+                                }
+                                catch (Exception)
+                                {
+                                    FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                                        string.Format("Unable to update {0} for group {1} (ID {2}) on Site Collection {3}.", "SipAddress", item.DisplayName, item.ID, item.Web.Site.Url), null);
                                 }
                             }
                         }
@@ -63,12 +71,16 @@ namespace Nauplius.SP.UserSync
                         {
                             var sipAddress = directoryEntry.Properties["proxyAddresses"].Value.ToString().Remove(0, 4);
 
-                            if (item["SipAddress"] != sipAddress)
+                            try
                             {
-                                item["SipAddress"] = sipAddress;
-                                shouldUpdate = true;
+                                shouldUpdate = TryUpdateValue(item, "SipAddress", (string)item["SipAddress"],
+                                    sipAddress);
                             }
-                                
+                            catch (Exception)
+                            {
+                                FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                                    string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "SipAddress", item.DisplayName, item.ID, item.Web.Site.Url), null);
+                            }    
                         }
                         else
                         {
@@ -92,6 +104,14 @@ namespace Nauplius.SP.UserSync
                 FoudationSync.LogMessage(400, FoudationSync.LogCategories.FoundationSync,
                     TraceSeverity.Unexpected, exception.Message + " " + exception.StackTrace, null);
             }
+        }
+
+        internal static bool TryUpdateValue(SPListItem item, string itemProperty, string itemValue, string ldapValue)
+        {
+            if (string.IsNullOrEmpty(itemValue) && string.IsNullOrEmpty(ldapValue)) return false;
+            if (itemValue == ldapValue) return false;
+            item[itemProperty] = ldapValue;
+            return true;
         }
     }
 }
