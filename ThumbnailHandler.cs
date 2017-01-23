@@ -18,6 +18,7 @@ namespace Nauplius.SP.UserSync
     {
         internal static string GetThumbnail(SPUser user, DirectoryEntry directoryEntry)
         {
+            if (FoundationSyncSettings.Local.PictureExpiryDays <= -1) return null;
             var siteUri = FoundationSyncSettings.Local.PictureStorageUrl;
             if (siteUri == null) return null;
             if (string.IsNullOrEmpty(siteUri.AbsoluteUri)) return null;
@@ -54,10 +55,6 @@ namespace Nauplius.SP.UserSync
                         try
                         {
                             pictureExpiryDays = FoundationSyncSettings.Local.PictureExpiryDays;
-
-                            if (pictureExpiryDays < -1)
-                                FoundationSyncSettings.Local.PictureExpiryDays = 1;
-                            pictureExpiryDays = 1;
                         }
                         catch (InvalidCastException)
                         {

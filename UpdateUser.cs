@@ -33,7 +33,7 @@ namespace Nauplius.SP.UserSync
                     {
                         shouldUpdate = TryUpdateValue(item, "Title", (string)item["Title"], title);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                             string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "Title", item.DisplayName, item.ID, item.Web.Site.Url), null);                        
