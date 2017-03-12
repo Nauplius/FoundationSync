@@ -12,6 +12,7 @@ namespace Nauplius.SP.UserSync
     //Flow: Record user in report on Users sheet (A), record any updated property (B), record overall updated (C)
     public class UpdateUser
     {
+        private static bool shouldUpdate = false;
         internal static void User(SPUser user, DirectoryEntry directoryEntry, SPListItemCollection listItems, int itemCount, int u)
         {
             try
@@ -31,7 +32,7 @@ namespace Nauplius.SP.UserSync
 
                     try
                     {
-                        shouldUpdate = TryUpdateValue(item, "Title", (string)item["Title"], title);
+                        TryUpdateValue(item, "Title", (string)item["Title"], title);
                     }
                     catch (Exception)
                     {
@@ -45,7 +46,7 @@ namespace Nauplius.SP.UserSync
 
                     try
                     {
-                        shouldUpdate = TryUpdateValue(item, "EMail", (string)item["EMail"], eMail);
+                        TryUpdateValue(item, "EMail", (string)item["EMail"], eMail);
                     }
                     catch (Exception)
                     {
@@ -60,7 +61,7 @@ namespace Nauplius.SP.UserSync
 
                     try
                     {
-                        shouldUpdate = TryUpdateValue(item, "JobTitle", (string)item["JobTitle"], jobTitle);
+                        TryUpdateValue(item, "JobTitle", (string)item["JobTitle"], jobTitle);
                     }
                     catch (Exception)
                     {
@@ -74,7 +75,7 @@ namespace Nauplius.SP.UserSync
                                               : directoryEntry.Properties["mobile"].Value.ToString();
                     try
                     {
-                        shouldUpdate = TryUpdateValue(item, "MobilePhone", (string) item["MobilePhone"], mobilePhone);
+                        TryUpdateValue(item, "MobilePhone", (string) item["MobilePhone"], mobilePhone);
                     }
                     catch (Exception)
                     {
@@ -118,7 +119,7 @@ namespace Nauplius.SP.UserSync
 
                                 try
                                 {
-                                    shouldUpdate = TryUpdateValue(item, "SipAddress", (string) item["SipAddress"],
+                                    TryUpdateValue(item, "SipAddress", (string) item["SipAddress"],
                                         sipAddress);
                                 }
                                 catch (Exception)
@@ -137,7 +138,7 @@ namespace Nauplius.SP.UserSync
 
                             try
                             {
-                                shouldUpdate = TryUpdateValue(item, "SipAddress", (string)item["SipAddress"],
+                                TryUpdateValue(item, "SipAddress", (string)item["SipAddress"],
                                     sipAddress);
                             }
                             catch (Exception)
@@ -167,12 +168,7 @@ namespace Nauplius.SP.UserSync
 
                     try
                     {
-                        shouldUpdate = TryUpdateValue(item, "Department", (string)item["Department"], department);
-                        if ((string)item["Department"] != department)
-                        {
-                            item["Department"] = department;
-                            shouldUpdate = true;
-                        }
+                        TryUpdateValue(item, "Department", (string)item["Department"], department);
                     }
                     catch (Exception)
                     {
@@ -190,7 +186,7 @@ namespace Nauplius.SP.UserSync
                                                    ? string.Empty
                                                    : directoryEntry.Properties[ldapAttribute.Value].Value.ToString();
 
-                            shouldUpdate = TryUpdateValue(item, ldapAttribute.Key, (string)item[ldapAttribute.Key], value);
+                            TryUpdateValue(item, ldapAttribute.Key, (string)item[ldapAttribute.Key], value);
                         }
                     }
                     catch (Exception)
@@ -222,6 +218,7 @@ namespace Nauplius.SP.UserSync
             if (string.IsNullOrEmpty(itemValue) && string.IsNullOrEmpty(ldapValue)) return false;
             if (itemValue == ldapValue) return false;
             item[itemProperty] = ldapValue;
+            shouldUpdate = true;
             return true;
         }
     }

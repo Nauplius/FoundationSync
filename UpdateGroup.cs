@@ -11,6 +11,7 @@ namespace Nauplius.SP.UserSync
 {
     public class UpdateGroup
     {
+        private static bool shouldUpdate = false;
         //Flow: Record group in report on Groups sheet (A), record any updated property (B), record overall updated (C)
         internal static void Group(SPUser group, DirectoryEntry directoryEntry,
             SPListItemCollection listItems, int itemCount, int u)
@@ -32,7 +33,7 @@ namespace Nauplius.SP.UserSync
 
                     try
                     {
-                        shouldUpdate = TryUpdateValue(item, "EMail", (string)item["EMail"], eMail);
+                        TryUpdateValue(item, "EMail", (string)item["EMail"], eMail);
                     }
                     catch (Exception)
                     {
@@ -54,7 +55,7 @@ namespace Nauplius.SP.UserSync
 
                                 try
                                 {
-                                    shouldUpdate = TryUpdateValue(item, "SipAddress", (string)item["SipAddress"],
+                                    TryUpdateValue(item, "SipAddress", (string)item["SipAddress"],
                                         sipAddress);
                                 }
                                 catch (Exception)
@@ -73,7 +74,7 @@ namespace Nauplius.SP.UserSync
 
                             try
                             {
-                                shouldUpdate = TryUpdateValue(item, "SipAddress", (string)item["SipAddress"],
+                                TryUpdateValue(item, "SipAddress", (string)item["SipAddress"],
                                     sipAddress);
                             }
                             catch (Exception)
@@ -111,6 +112,7 @@ namespace Nauplius.SP.UserSync
             if (string.IsNullOrEmpty(itemValue) && string.IsNullOrEmpty(ldapValue)) return false;
             if (itemValue == ldapValue) return false;
             item[itemProperty] = ldapValue;
+            shouldUpdate = true;
             return true;
         }
     }
