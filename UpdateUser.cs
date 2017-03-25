@@ -20,7 +20,7 @@ namespace Nauplius.SP.UserSync
                 var j = 0;
                 for (; j < itemCount; j++)
                 {
-                    var shouldUpdate = false;
+                    shouldUpdate = false;
 
                     var item = listItems[j];
 
