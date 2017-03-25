@@ -98,7 +98,6 @@
     <None Include="ADMIN\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{d658803c-1f66-4ac0-8f2a-5a7574a7148b}</SharePointProjectItemId>
     </None>
-    <Content Include="DeploymentScript\FoundationSync.sql" />
     <Content Include="DeploymentScript\Nauplius.SharePoint.FoundationSync.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
