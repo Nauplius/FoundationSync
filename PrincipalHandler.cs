@@ -81,7 +81,7 @@ namespace Nauplius.SP.UserSync
                     }
                     else
                     {
-                        FoundationSync.LogMessage(202, FoundationSync.LogCategories.FoundationSync, TraceSeverity.VerboseEx,
+                        FoundationSync.LogMessage(203, FoundationSync.LogCategories.FoundationSync, TraceSeverity.VerboseEx,
                             string.Format("IsUser:{0}. RootWeb: {1}. {2}{3}", objPrincipal.LoginName, site.RootWeb.Url), null);
 
                         if (claimProvider != null && objPrincipal.LoginName.Contains(@"i:0#.w"))
@@ -193,7 +193,7 @@ namespace Nauplius.SP.UserSync
             catch (Exception e)
             {
                 FoundationSync.LogMessage(505, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                    string.Format("Unexpected exception attempting to determine if user is active: User: {0}. Status value: {1}. {2}", de.Username ,status, e.StackTrace), null);
+                    string.Format("Unexpected exception attempting to determine if user is active: User: {0}. Status value: {1}. {2}", de.Username, status, e.StackTrace), null);
             }
 
             return status;

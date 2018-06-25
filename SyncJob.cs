@@ -43,8 +43,6 @@ namespace Nauplius.SP.UserSync
 
         public override void Execute(Guid targetInstanceId)
         {
-            LoggingEx.CreateReportStorage();
-
             try
             {
                 var farm = SPFarm.Local;
@@ -74,10 +72,6 @@ namespace Nauplius.SP.UserSync
                             userAccounts.Add(userPrincipal);
                         }
 
-                        if (_loggingEx)
-                            LoggingExData(string.Format("{0} user principals in site {1}",
-                                userAccounts.Count, site.Url), LoggingEx.LoggingExType.UsersFoundCount);
-
                         FoundationSync.LogMessage(100, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} user principals in site {1}", userAccounts.Count, site.Url), null);
 
@@ -94,10 +88,6 @@ namespace Nauplius.SP.UserSync
                             groupAccounts.Add(groupPrincipal);
                         }
 
-                        if (_loggingEx)
-                            LoggingExData(string.Format("{0} group principals in site {1}",
-                                groupAccounts.Count, site.Url), LoggingEx.LoggingExType.UsersFoundCount);
-
                         FoundationSync.LogMessage(101, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} group principals in site {1}", groupAccounts.Count, site.Url), null);
 
@@ -107,21 +97,11 @@ namespace Nauplius.SP.UserSync
                         site.Dispose();
                     }
                 }
-
-                if (_loggingEx)
-                    LoggingExData(string.Format("{0} user principals deleted",
-                        j), LoggingEx.LoggingExType.UsersDeletedCount);
-
-                if (_loggingEx)
-                    LoggingExData(string.Format("{0} users and groups updated",
-                        u), LoggingEx.LoggingExType.UsersUpdatedCount);
-
-                LoggingEx.SaveReport();
             }
             catch (IndexOutOfRangeException)
             {
                 FoundationSync.LogMessage(102, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Medium,
-                   string.Format("Index was out of range."), null);
+                   null, null);
             }
         }
 
