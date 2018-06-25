@@ -33,6 +33,8 @@ namespace Nauplius.SP.UserSync
                         if (claimProvider != null && objPrincipal.LoginName.Contains(@"c:0+.w"))
                         {
                             var sid = claimProvider.DecodeClaim(objPrincipal.LoginName).Value;
+                            FoundationSync.LogMessage(202, FoundationSync.LogCategories.FoundationSync, TraceSeverity.VerboseEx, 
+                                string.Format("IsGroup:{0}. RootWeb: {1}. {2}{3}", objPrincipal.LoginName, site.RootWeb.Url), null);
 
                             try
                             {
@@ -41,7 +43,7 @@ namespace Nauplius.SP.UserSync
                             }
                             catch (Exception exception)
                             {
-                                FoudationSync.LogMessage(503, FoudationSync.LogCategories.FoundationSync,
+                                FoundationSync.LogMessage(503, FoundationSync.LogCategories.FoundationSync,
                                     TraceSeverity.High,
                                     exception.Message + exception.StackTrace, null);
                                 continue;
@@ -72,12 +74,16 @@ namespace Nauplius.SP.UserSync
                         }
                         catch (DirectoryServicesCOMException exception)
                         {
-                            FoudationSync.LogMessage(403, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                                exception.Message + exception.StackTrace, null);
+                            FoundationSync.LogMessage(403, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected, 
+                                string.Format("IsGroup:{0}. RootWeb: {1}. {2}{3}", objPrincipal.LoginName, 
+                                site.RootWeb.Url, exception.Message, exception.StackTrace), null);
                         }
                     }
                     else
                     {
+                        FoundationSync.LogMessage(202, FoundationSync.LogCategories.FoundationSync, TraceSeverity.VerboseEx,
+                            string.Format("IsUser:{0}. RootWeb: {1}. {2}{3}", objPrincipal.LoginName, site.RootWeb.Url), null);
+
                         if (claimProvider != null && objPrincipal.LoginName.Contains(@"i:0#.w"))
                         {
                             loginName = claimProvider.DecodeClaim(objPrincipal.LoginName).Value;
@@ -138,8 +144,14 @@ namespace Nauplius.SP.UserSync
                         }
                         catch (DirectoryServicesCOMException exception)
                         {
-                            FoudationSync.LogMessage(404, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
-                                exception.Message + exception.StackTrace, null);
+                            FoundationSync.LogMessage(404, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                                string.Format("IsUser:{0}. RootWeb: {1}. {2}{3}", objPrincipal.LoginName, 
+                                site.RootWeb.Url, exception.Message, exception.StackTrace), null);
+                        }
+                        catch (Exception exception)
+                        {
+                            FoundationSync.LogMessage(405, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected, 
+                                string.Format("Unknown error: {0}{1}", exception.Message, exception.StackTrace), null);
                         }
                     }
                 }
@@ -159,7 +171,7 @@ namespace Nauplius.SP.UserSync
             }
             catch (Exception e)
             {
-                FoudationSync.LogMessage(410, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                FoundationSync.LogMessage(410, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                     string.Format("Unexpected exception attempting to retrieve domain name: {0}. {1}", domainName, e.StackTrace), null);
                 return null;
             }
@@ -180,7 +192,7 @@ namespace Nauplius.SP.UserSync
             }
             catch (Exception e)
             {
-                FoudationSync.LogMessage(505, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                FoundationSync.LogMessage(505, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                     string.Format("Unexpected exception attempting to determine if user is active: User: {0}. Status value: {1}. {2}", de.Username ,status, e.StackTrace), null);
             }
 
@@ -203,7 +215,7 @@ namespace Nauplius.SP.UserSync
                     }
                     catch (Exception e)
                     {
-                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                        FoundationSync.LogMessage(506, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                             string.Format("Unexpected exception attempting to remove user: User: {0} (ID: {1}). Url: {2}. {3}", objPrincipal.LoginName, objPrincipal.ID, siteUrl, e.StackTrace), null);
                     }
                 }

@@ -57,7 +57,7 @@ namespace Nauplius.SP.UserSync
             }
             catch (Exception e)
             {
-                FoudationSync.LogMessage(402, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                FoundationSync.LogMessage(402, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                     "Unable to create Report Storage in Central Administration for" +
                     " FoundationSyncSetting object. " + e.StackTrace, null);
             }

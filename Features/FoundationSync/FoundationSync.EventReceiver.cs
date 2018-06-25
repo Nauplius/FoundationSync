@@ -116,12 +116,12 @@ namespace Nauplius.SP.UserSync.Features.UserSync
             var farm = properties.Definition.Farm;
 
             if (farm == null) return;
-            var log = FoudationSync.Local;
+            var log = FoundationSync.Local;
 
             if (register)
             {
                 if (log != null) return;
-                log = new FoudationSync();
+                log = new FoundationSync();
                 log.Update();
 
                 if (log.Status != SPObjectStatus.Offline)

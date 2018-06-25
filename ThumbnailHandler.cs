@@ -80,13 +80,13 @@ namespace Nauplius.SP.UserSync
             }
             catch (FileNotFoundException)
             {
-                FoudationSync.LogMessage(1004, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                FoundationSync.LogMessage(1004, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                     string.Format("Invalid Site URL specified for Picture Site Collection URL."), null);
                 return null;
             }
             catch (Exception)
             {
-                FoudationSync.LogMessage(2001, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
+                FoundationSync.LogMessage(2001, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                     string.Format("Error retrieving picture file from UserPhotos library, continuing to pull new picture."), null);
             }
 
@@ -129,7 +129,7 @@ namespace Nauplius.SP.UserSync
                     }
                     catch (Exception exception)
                     {
-                        FoudationSync.LogMessage(601, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Medium,
+                        FoundationSync.LogMessage(601, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Medium,
                             exception.Message + exception.StackTrace, null);
                     }
 
@@ -192,7 +192,7 @@ namespace Nauplius.SP.UserSync
             }
             catch (Exception exception)
             {
-                FoudationSync.LogMessage(405, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                FoundationSync.LogMessage(405, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                     exception.Message + exception.StackTrace, null);
             }
 

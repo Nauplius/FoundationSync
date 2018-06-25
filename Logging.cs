@@ -4,19 +4,19 @@ using Microsoft.SharePoint.Administration;
 
 namespace Nauplius.SP.UserSync
 {
-    public class FoudationSync : SPDiagnosticsServiceBase
+    public class FoundationSync : SPDiagnosticsServiceBase
     {
         public static string NaupliusDiagnosticArea = "Nauplius";
-        public FoudationSync()
+        public FoundationSync()
             : base(DefaultName, SPFarm.Local)
         {
         }
 
-        public static FoudationSync Local
+        public static FoundationSync Local
         {
             get
             {
-                return SPFarm.Local.Services.GetValue<FoudationSync>(DefaultName);
+                return SPFarm.Local.Services.GetValue<FoundationSync>(DefaultName);
             }
         }
 
@@ -80,6 +80,8 @@ namespace Nauplius.SP.UserSync
  * 200 (Verbose, Success):
  *  200: Updating group {0} (ID {1}) on Site Collection {2}.
  *  201: Updating user {0} (ID {1}) on Site Collection {2}.
+ *  202: Group LoginName {0} on Site Collection {1}.
+ *  203: User LoginName {0} on Site Collection {1}.
  * 400 (Unexpected, Failure):
  *  400, 401, 402, 403, 404, 405 (StackTrace only)
  *  410: Unexpected exception attempting to retrieve domain name.

@@ -80,7 +80,7 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
                 }
                 catch (Exception ex)
                 {
-                    FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                    UserSync.FoundationSync.LogMessage(1002, UserSync.FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                         string.Format("Unable to set UseExchange or EwsUrl values with error {0}.", ex.InnerException), null);
                 }                
             }
@@ -97,7 +97,7 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             }
             catch (Exception)
             {
-                FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                UserSync.FoundationSync.LogMessage(1002, UserSync.FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                     string.Format("Unable to retrieve EwsUrl when loading settings."), null);                
             }
 
@@ -115,7 +115,7 @@ namespace Nauplius.SP.UserSync.ADMIN.FoundationSync
             }
             catch (Exception)
             {
-                FoudationSync.LogMessage(1002, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                UserSync.FoundationSync.LogMessage(1002, UserSync.FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                     string.Format("Unable to retrieve PictureStorageUrl when loading settings."), null);     
             }
         }

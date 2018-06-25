@@ -78,7 +78,7 @@ namespace Nauplius.SP.UserSync
                             LoggingExData(string.Format("{0} user principals in site {1}",
                                 userAccounts.Count, site.Url), LoggingEx.LoggingExType.UsersFoundCount);
 
-                        FoudationSync.LogMessage(100, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
+                        FoundationSync.LogMessage(100, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} user principals in site {1}", userAccounts.Count, site.Url), null);
 
                         PrincipalHandler.SearchPrincipals(userAccounts, webApplication, site, false, j, u);
@@ -98,7 +98,7 @@ namespace Nauplius.SP.UserSync
                             LoggingExData(string.Format("{0} group principals in site {1}",
                                 groupAccounts.Count, site.Url), LoggingEx.LoggingExType.UsersFoundCount);
 
-                        FoudationSync.LogMessage(101, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
+                        FoundationSync.LogMessage(101, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} group principals in site {1}", groupAccounts.Count, site.Url), null);
 
                         PrincipalHandler.SearchPrincipals(groupAccounts, webApplication, site, true, j, u);
@@ -120,7 +120,7 @@ namespace Nauplius.SP.UserSync
             }
             catch (IndexOutOfRangeException)
             {
-                FoudationSync.LogMessage(102, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Medium,
+                FoundationSync.LogMessage(102, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Medium,
                    string.Format("Index was out of range."), null);
             }
         }

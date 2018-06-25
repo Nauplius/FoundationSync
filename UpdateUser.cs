@@ -36,7 +36,7 @@ namespace Nauplius.SP.UserSync
                     }
                     catch (Exception)
                     {
-                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                        FoundationSync.LogMessage(506, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                             string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "Title", item.DisplayName, item.ID, item.Web.Site.Url), null);                        
                     }
 
@@ -50,7 +50,7 @@ namespace Nauplius.SP.UserSync
                     }
                     catch (Exception)
                     {
-                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                        FoundationSync.LogMessage(506, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                             string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "EMail", item.DisplayName, item.ID, item.Web.Site.Url), null);
                     }
 
@@ -65,7 +65,7 @@ namespace Nauplius.SP.UserSync
                     }
                     catch (Exception)
                     {
-                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                        FoundationSync.LogMessage(506, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                            string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "JobTitle", item.DisplayName, item.ID, item.Web.Site.Url), null);                       
                     }
 
@@ -79,7 +79,7 @@ namespace Nauplius.SP.UserSync
                     }
                     catch (Exception)
                     {
-                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                        FoundationSync.LogMessage(506, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                            string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "MobilePhone", item.DisplayName, item.ID, item.Web.Site.Url), null);     
                     }
 
@@ -100,7 +100,7 @@ namespace Nauplius.SP.UserSync
                         }
                         catch (Exception)
                         {
-                            FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                            FoundationSync.LogMessage(506, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                                 string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "Picture", item.DisplayName, item.ID, item.Web.Site.Url), null);                              
                         }
                     }
@@ -124,7 +124,7 @@ namespace Nauplius.SP.UserSync
                                 }
                                 catch (Exception)
                                 {
-                                    FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                                    FoundationSync.LogMessage(506, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                                         string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "SipAddress", item.DisplayName, item.ID, item.Web.Site.Url), null);                                    
                                 }
                             }
@@ -143,7 +143,7 @@ namespace Nauplius.SP.UserSync
                             }
                             catch (Exception)
                             {
-                                FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                                FoundationSync.LogMessage(506, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                                     string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "SipAddress", item.DisplayName, item.ID, item.Web.Site.Url), null);
                             }
 
@@ -156,7 +156,7 @@ namespace Nauplius.SP.UserSync
                             }
                             catch (Exception)
                             {
-                                FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                                FoundationSync.LogMessage(506, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                                     string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "SipAddress", item.DisplayName, item.ID, item.Web.Site.Url), null);
                             }
                         }
@@ -172,7 +172,7 @@ namespace Nauplius.SP.UserSync
                     }
                     catch (Exception)
                     {
-                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                        FoundationSync.LogMessage(506, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                             string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "Department", item.DisplayName, item.ID, item.Web.Site.Url), null);
                     }
 
@@ -191,13 +191,13 @@ namespace Nauplius.SP.UserSync
                     }
                     catch (Exception)
                     {
-                        FoudationSync.LogMessage(506, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                        FoundationSync.LogMessage(506, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                             string.Format("Unable to update {0} for user {1} (ID {2}) on Site Collection {3}.", "AdditionalAttribues Value", item.DisplayName, item.ID, item.Web.Site.Url), null);
                     }
 
                     if (shouldUpdate)
                     {
-                        FoudationSync.LogMessage(201, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
+                        FoundationSync.LogMessage(201, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("Updating user {0} (ID {1}) on Site Collection {2}.", item.DisplayName, item.ID, item.Web.Site.Url), null);
                         item.Update();
                         ++u;
@@ -208,7 +208,7 @@ namespace Nauplius.SP.UserSync
             }
             catch (SPException exception)
             {
-                FoudationSync.LogMessage(401, FoudationSync.LogCategories.FoundationSync,
+                FoundationSync.LogMessage(401, FoundationSync.LogCategories.FoundationSync,
                     TraceSeverity.Unexpected, exception.Message + " " + exception.StackTrace, null);
             }
         }

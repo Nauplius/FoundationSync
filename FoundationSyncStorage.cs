@@ -16,7 +16,7 @@ namespace Nauplius.SP.UserSync
             }
             catch (Exception e)
             {
-                FoudationSync.LogMessage(504, FoudationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
+                FoundationSync.LogMessage(504, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Unexpected,
                     "Unable to read FoundationSyncSetting object. " + e.StackTrace, null);
             }
 
