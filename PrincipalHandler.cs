@@ -34,7 +34,7 @@ namespace Nauplius.SP.UserSync
                         {
                             var sid = claimProvider.DecodeClaim(objPrincipal.LoginName).Value;
                             FoundationSync.LogMessage(202, FoundationSync.LogCategories.FoundationSync, TraceSeverity.VerboseEx, 
-                                string.Format("IsGroup:{0}. RootWeb: {1}. {2}{3}", objPrincipal.LoginName, site.RootWeb.Url), null);
+                                string.Format("IsGroup:{0}. RootWeb: {1}.", objPrincipal.LoginName, site.RootWeb.Url), null);
 
                             try
                             {
@@ -82,7 +82,7 @@ namespace Nauplius.SP.UserSync
                     else
                     {
                         FoundationSync.LogMessage(203, FoundationSync.LogCategories.FoundationSync, TraceSeverity.VerboseEx,
-                            string.Format("IsUser:{0}. RootWeb: {1}. {2}{3}", objPrincipal.LoginName, site.RootWeb.Url), null);
+                            string.Format("IsUser:{0}. RootWeb: {1}.", objPrincipal.LoginName, site.RootWeb.Url), null);
 
                         if (claimProvider != null && objPrincipal.LoginName.Contains(@"i:0#.w"))
                         {
