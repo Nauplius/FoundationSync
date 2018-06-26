@@ -1,17 +1,7 @@
-﻿using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Net;
-using System.Security.Cryptography;
-using System.Security.Principal;
-using System.Text;
-using Microsoft.SharePoint;
+﻿using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
-using Microsoft.SharePoint.Administration.Claims;
 using System;
 using System.Collections.Generic;
-using System.DirectoryServices;
-using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -21,21 +11,18 @@ namespace Nauplius.SP.UserSync
     public class SyncJob : SPJobDefinition
     {
         private const string tJobName = "Nauplius.SharePoint.FoundationSync";
-        private static int j; //RemoveUsers method
-        private static int u; //Users updated
-        private readonly bool _loggingEx = FoundationSyncSettings.Local.LoggingEx;
 
         public SyncJob()
             : base()
         {
         }
 
-        public SyncJob(String name, SPService service, SPServer server, SPJobLockType lockType)
+        public SyncJob(string name, SPService service, SPServer server, SPJobLockType lockType)
             : base(name, service, server, SPJobLockType.Job)
         {
         }
 
-        public SyncJob(String name, SPService service)
+        public SyncJob(string name, SPService service)
             : base(name, service, null, SPJobLockType.Job)
         {
             Title = tJobName;
@@ -75,7 +62,7 @@ namespace Nauplius.SP.UserSync
                         FoundationSync.LogMessage(100, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} user principals in site {1}", userAccounts.Count, site.Url), null);
 
-                        PrincipalHandler.SearchPrincipals(userAccounts, webApplication, site, false, j, u);
+                        PrincipalHandler.SearchPrincipals(userAccounts, webApplication, site, false);
 
                         userAccounts.Clear();
 
@@ -91,7 +78,7 @@ namespace Nauplius.SP.UserSync
                         FoundationSync.LogMessage(101, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("{0} group principals in site {1}", groupAccounts.Count, site.Url), null);
 
-                        PrincipalHandler.SearchPrincipals(groupAccounts, webApplication, site, true, j, u);
+                        PrincipalHandler.SearchPrincipals(groupAccounts, webApplication, site, true);
                         groupAccounts.Clear();
 
                         site.Dispose();
@@ -103,11 +90,6 @@ namespace Nauplius.SP.UserSync
                 FoundationSync.LogMessage(102, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Medium,
                    null, null);
             }
-        }
-
-        internal static void LoggingExData(string logMessage, LoggingEx.LoggingExType logType)
-        {
-            LoggingEx.BuildReport(logMessage, logType);
         }
     }
 }

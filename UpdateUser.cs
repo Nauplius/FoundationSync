@@ -13,7 +13,7 @@ namespace Nauplius.SP.UserSync
     public class UpdateUser
     {
         private static bool shouldUpdate = false;
-        internal static void User(SPUser user, DirectoryEntry directoryEntry, SPListItemCollection listItems, int itemCount, int u)
+        internal static void User(SPUser user, DirectoryEntry directoryEntry, SPListItemCollection listItems, int itemCount)
         {
             try
             {
@@ -200,7 +200,6 @@ namespace Nauplius.SP.UserSync
                         FoundationSync.LogMessage(201, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("Updating user {0} (ID {1}) on Site Collection {2}.", item.DisplayName, item.ID, item.Web.Site.Url), null);
                         item.Update();
-                        ++u;
                     }
 
                     return;

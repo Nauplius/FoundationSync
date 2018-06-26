@@ -86,7 +86,6 @@
     <Compile Include="FoundationSyncSettings.cs" />
     <Compile Include="FoundationSyncStorage.cs" />
     <Compile Include="Logging.cs" />
-    <Compile Include="LoggingEx.cs" />
     <Compile Include="PrincipalHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SyncJob.cs" />

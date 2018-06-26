@@ -12,9 +12,9 @@ namespace Nauplius.SP.UserSync
     public class UpdateGroup
     {
         private static bool shouldUpdate = false;
-        //Flow: Record group in report on Groups sheet (A), record any updated property (B), record overall updated (C)
+
         internal static void Group(SPUser group, DirectoryEntry directoryEntry,
-            SPListItemCollection listItems, int itemCount, int u)
+            SPListItemCollection listItems, int itemCount)
         {
             try
             {
@@ -94,7 +94,6 @@ namespace Nauplius.SP.UserSync
                         FoundationSync.LogMessage(200, FoundationSync.LogCategories.FoundationSync, TraceSeverity.Verbose,
                             string.Format("Updating group {0} (ID {1}) on Site Collection {2}.", item.DisplayName, item.ID, item.Web.Site.Url), null);
                         item.Update();
-                        ++u;
                     }
 
                     return;

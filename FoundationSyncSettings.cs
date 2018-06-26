@@ -13,9 +13,6 @@ namespace Nauplius.SP.UserSync
         private const string name = "FoundationSyncSettings";
         [Persisted] private bool m_deleteUsers;
         [Persisted] private bool m_deleteDisabledUsers;
-        [Persisted] private bool m_loggingEx;
-        [Persisted] private bool m_loggingExVerbose;
-        [Persisted] private SPDocumentLibrary m_loggingExLibrary;
         [Persisted] private Collection<SPWebApplication> m_webApplicationCollection;
         [Persisted] private Collection<SPSite> m_spSiteCollection;
         [Persisted] private bool m_useExchange = false;
@@ -71,24 +68,6 @@ namespace Nauplius.SP.UserSync
         {
             get { return m_deleteDisabledUsers; }
             set { m_deleteDisabledUsers = value; }
-        }
-
-        public bool LoggingEx
-        {
-            get { return m_loggingEx; }
-            set { m_loggingEx = false; }
-        }
-
-        internal bool LoggingExVerbose
-        {
-            get { return m_loggingExVerbose; }
-            set { m_loggingExVerbose = value; }
-        }
-
-        internal SPDocumentLibrary LoggingExLibrary
-        {
-            get { return m_loggingExLibrary; }
-            set { m_loggingExLibrary = value; }
         }
 
         public Collection<SPWebApplication> WebApplicationCollection

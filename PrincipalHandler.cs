@@ -12,7 +12,7 @@ namespace Nauplius.SP.UserSync
     public class PrincipalHandler
     {
         internal static void SearchPrincipals(HashSet<SPUser> objPrincipals,
-                         SPWebApplication webApplication, SPSite site, bool isGroup, int j, int u)
+                         SPWebApplication webApplication, SPSite site, bool isGroup)
         {
             var chasing = webApplication.PeoplePickerSettings.ReferralChasingOption;
 
@@ -70,7 +70,7 @@ namespace Nauplius.SP.UserSync
                         {
                             var result = searcher.FindOne();
                             var directoryEntry = result.GetDirectoryEntry();
-                            UpdateGroup.Group(objPrincipal, directoryEntry, listItems, itemCount, u);
+                            UpdateGroup.Group(objPrincipal, directoryEntry, listItems, itemCount);
                         }
                         catch (DirectoryServicesCOMException exception)
                         {
@@ -124,7 +124,7 @@ namespace Nauplius.SP.UserSync
                             {
                                 if (FoundationSyncSettings.Local.DeleteUsers)
                                 {
-                                    RemoveUsers(objPrincipal, site.Url, j);
+                                    RemoveUsers(objPrincipal, site.Url);
   
                                 }
                                 continue;
@@ -134,13 +134,13 @@ namespace Nauplius.SP.UserSync
                             {
                                 if (FoundationSyncSettings.Local.DeleteDisabledUsers)
                                 {
-                                    RemoveUsers(objPrincipal, site.Url, j);
+                                    RemoveUsers(objPrincipal, site.Url);
                                 }
                                 continue;
                             }
 
                             var directoryEntry = result.GetDirectoryEntry();
-                            UpdateUser.User(objPrincipal, directoryEntry, listItems, itemCount, u);
+                            UpdateUser.User(objPrincipal, directoryEntry, listItems, itemCount);
                         }
                         catch (DirectoryServicesCOMException exception)
                         {
@@ -199,7 +199,7 @@ namespace Nauplius.SP.UserSync
             return status;
         }
 
-        private static void RemoveUsers(SPUser objPrincipal, string siteUrl, int j)
+        private static void RemoveUsers(SPUser objPrincipal, string siteUrl)
         {
             using (SPSite site = new SPSite(siteUrl))
             {
@@ -211,7 +211,6 @@ namespace Nauplius.SP.UserSync
                         if (user.IsSiteAdmin) return;
 
                         web.SiteUsers.Remove(user.LoginName);
-                        ++j;
                     }
                     catch (Exception e)
                     {
