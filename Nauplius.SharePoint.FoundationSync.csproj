@@ -72,9 +72,12 @@
       <DependentUpon>ProfileSettings.aspx.cs</DependentUpon>
     </Compile>
     <Compile Include="Logging.cs" />
-    <Compile Include="LoggingEx.cs" />
+    <Compile Include="PrincipalHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Push.cs" />
+    <Compile Include="SyncJob.cs" />
+    <Compile Include="ThumbnailHandler.cs" />
+    <Compile Include="UpdateGroup.cs" />
+    <Compile Include="UpdateUser.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ADMIN\SharePointProjectItem.spdata">

@@ -4,19 +4,19 @@ using Microsoft.SharePoint.Administration;
 
 namespace Nauplius.SP.UserSync
 {
-    public class FoudationSync : SPDiagnosticsServiceBase
+    public class FoundationSync : SPDiagnosticsServiceBase
     {
         public static string NaupliusDiagnosticArea = "Nauplius";
-        public FoudationSync()
+        public FoundationSync()
             : base(DefaultName, SPFarm.Local)
         {
         }
 
-        public static FoudationSync Local
+        public static FoundationSync Local
         {
             get
             {
-                return SPFarm.Local.Services.GetValue<FoudationSync>(DefaultName);
+                return SPFarm.Local.Services.GetValue<FoundationSync>(DefaultName);
             }
         }
 
@@ -80,15 +80,18 @@ namespace Nauplius.SP.UserSync
  * 200 (Verbose, Success):
  *  200: Updating group {0} (ID {1}) on Site Collection {2}.
  *  201: Updating user {0} (ID {1}) on Site Collection {2}.
+ *  202: Group LoginName {0} on Site Collection {1}.
+ *  203: User LoginName {0} on Site Collection {1}.
  * 400 (Unexpected, Failure):
- *  400, 401, 402 (StackTrace only)
+ *  400, 401, 402, 403, 404, 405 (StackTrace only)
+ *  410: Unexpected exception attempting to retrieve domain name.
  * 500 (High, Failure):
- *  500: Unexpected exception attempting to retrieve domain name. //Unexpected, incorrect, ToDo: should be 400
- *  501, 502 (StackTrace only) //Unexpected, incorrect, ToDo: should be 400
  *  503 (StackTrace only)
  *  504: Unable to read FoundationSyncSetting object.
- * 601 (?? ToDo: Merge with new Medium category)
- * 701 (?? Unexpected, ToDo: move to 400)
+ *  505: IsActive returned an error
+ *  506: Unable to remove user due to an error
+ * 600 (Medium, Failure)
+ * 601: (StackTrace only)
  * UI Errors:
  * 1000 (Unexpected, Failure):
  *  1001: Unable to retrieve useExchange or ewsUrl when loading settings. Try setting them manually on the SPFarm object.
@@ -99,5 +102,5 @@ namespace Nauplius.SP.UserSync
  *  1003: Unable to set permissions on UserPhotos list. Add Authenticated Users with Read rights manually. {0}
  *  1004: Invalid Site URL specified for Picture Site Collection URL
  * 2000 (Verbose, Failure):
- *  2001: Error retriving file, continuing to pull new file. //ToDo: Fix Spelling
+ *  2001: Error retrieving picture file from UserPhotos library, continuing to pull new picture.
 */

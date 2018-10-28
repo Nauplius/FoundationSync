@@ -40,13 +40,13 @@ namespace Nauplius.SP.UserSync.Features.UserSync
                 if (!string.IsNullOrEmpty(farm.Properties.ContainsKey("FoundationSyncPreferredServer").ToString()))
                 {
                     var server = farm.Servers[farm.Properties["FoundationSyncPreferredServer"].ToString()];
-                    var timerJob = new AttributePush(tJobName, service, server, SPJobLockType.Job) { Schedule = schedule };
+                    var timerJob = new SyncJob(tJobName, service, server, SPJobLockType.Job) { Schedule = schedule };
                     timerJob.Update();
                 }
             }
             catch (NullReferenceException)
             {
-                var timerJob = new AttributePush(tJobName, service) { Schedule = schedule };
+                var timerJob = new SyncJob(tJobName, service) { Schedule = schedule };
                 timerJob.Update();
             }
 
@@ -116,12 +116,12 @@ namespace Nauplius.SP.UserSync.Features.UserSync
             var farm = properties.Definition.Farm;
 
             if (farm == null) return;
-            var log = FoudationSync.Local;
+            var log = FoundationSync.Local;
 
             if (register)
             {
                 if (log != null) return;
-                log = new FoudationSync();
+                log = new FoundationSync();
                 log.Update();
 
                 if (log.Status != SPObjectStatus.Offline)

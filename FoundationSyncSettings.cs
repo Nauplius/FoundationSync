@@ -11,25 +11,37 @@ namespace Nauplius.SP.UserSync
     internal class FoundationSyncSettings : SPPersistedObject
     {
         private const string name = "FoundationSyncSettings";
-        [Persisted] private bool m_deleteUsers;
-        [Persisted] private bool m_deleteDisabledUsers;
-        [Persisted] private bool m_loggingEx;
-        [Persisted] private bool m_loggingExVerbose;
-        [Persisted] private SPDocumentLibrary m_loggingExLibrary;
-        [Persisted] private Collection<SPWebApplication> m_webApplicationCollection;
-        [Persisted] private Collection<SPSite> m_spSiteCollection;
-        [Persisted] private bool m_useExchange = false;
-        [Persisted] private Uri m_pictureStorageUrl = null;
-        [Persisted] private Uri m_ewsUrl = null;
-        [Persisted] private int m_pictureExpiryDays = 1;
-        [Persisted] private string m_ewsPictureSize = "648x648";
-        [Persisted] private List<string> m_ignoredUsers = new List<string>()
+        [Persisted]
+        private bool m_deleteUsers;
+        [Persisted]
+        private bool m_deleteDisabledUsers;
+        [Persisted]
+        private Collection<SPWebApplication> m_webApplicationCollection;
+        [Persisted]
+        private Collection<SPSite> m_spSiteCollection;
+        [Persisted]
+        private bool m_useExchange = false;
+        [Persisted]
+        private Uri m_pictureStorageUrl = null;
+        [Persisted]
+        private Uri m_ewsUrl = null;
+        [Persisted]
+        private int m_pictureExpiryDays = 1;
+        [Persisted]
+        private string m_ewsPictureSize = "648x648";
+        [Persisted]
+        private List<string> m_ignoredUsers = new List<string>()
         {
             @"NT AUTHORITY\",
+            @"BUILTIN\",
             @"SHAREPOINT\",
             @"c:0(.s|true",
             @"c:0!.s|windows"
         };
+        [Persisted]
+        private Dictionary<string, string> m_additionalUserAttributes = new Dictionary<string, string>(); //UIL Property (Key), LDAP Attribute (Value)
+        [Persisted]
+        private string m_connectionString;
 
         public FoundationSyncSettings()
         { }
@@ -68,24 +80,6 @@ namespace Nauplius.SP.UserSync
         {
             get { return m_deleteDisabledUsers; }
             set { m_deleteDisabledUsers = value; }
-        }
-
-        public bool LoggingEx
-        {
-            get { return m_loggingEx; }
-            set { m_loggingEx = value; }
-        }
-
-        internal bool LoggingExVerbose
-        {
-            get { return m_loggingExVerbose; }
-            set { m_loggingExVerbose = value; }
-        }
-
-        internal SPDocumentLibrary LoggingExLibrary
-        {
-            get { return m_loggingExLibrary; }
-            set { m_loggingExLibrary = value; }
         }
 
         public Collection<SPWebApplication> WebApplicationCollection
@@ -154,6 +148,18 @@ namespace Nauplius.SP.UserSync
             {
                 m_ignoredUsers = value;
             }
+        }
+
+        public Dictionary<string, string> AdditionalUserAttributes
+        {
+            get { return m_additionalUserAttributes; }
+            set { m_additionalUserAttributes = value; }
+        }
+
+        public string ConnectionString
+        {
+            get { return m_connectionString; }
+            set { m_connectionString = value; }
         }
     }
 }

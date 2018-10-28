@@ -57,7 +57,7 @@ namespace Nauplius.SP.UserSync.Features.UserPhotosFeature
             }
             catch (Exception ex)
             {
-                FoudationSync.LogMessage(1003, FoudationSync.LogCategories.FoundationSync,
+                FoundationSync.LogMessage(1003, FoundationSync.LogCategories.FoundationSync,
                     TraceSeverity.Unexpected,
                     string.Format("Unable to create UserPhotos library. " +
                                   "Please create the UserPhotos library manually. {0}",
@@ -86,7 +86,7 @@ namespace Nauplius.SP.UserSync.Features.UserPhotosFeature
             }
             catch (Exception ex)
             {
-                FoudationSync.LogMessage(1003, FoudationSync.LogCategories.FoundationSync,
+                FoundationSync.LogMessage(1003, FoundationSync.LogCategories.FoundationSync,
                     TraceSeverity.Unexpected,
                     string.Format("Unable to set permissions on UserPhotos list. " +
                                   "Add Authenticated Users with Read rights manually. {0}",
