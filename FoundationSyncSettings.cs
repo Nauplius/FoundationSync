@@ -30,7 +30,6 @@ namespace Nauplius.SP.UserSync
         };
         [Persisted] private Dictionary<string, string> m_additionalUserAttributes = new Dictionary<string, string>(); //UIL Property (Key), LDAP Attribute (Value)
         [Persisted] private string m_connectionString;
-        [Persisted] private int m_threads;
 
         public FoundationSyncSettings()
         { }
@@ -149,18 +148,6 @@ namespace Nauplius.SP.UserSync
         {
             get { return m_connectionString; }
             set { m_connectionString = value; }
-        }
-
-        public int MaxThreads
-        {
-            get { return m_threads; }
-            set
-            {
-                m_threads = value;
-
-                if (m_threads < 1)
-                    m_threads = 1;
-            }
         }
     }
 }

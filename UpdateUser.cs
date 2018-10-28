@@ -91,11 +91,11 @@ namespace Nauplius.SP.UserSync
                         {
                             if (!string.IsNullOrEmpty(uri))
                             {
-                                item["Picture"] = uri;
+                                TryUpdateValue(item, "Picture", (string)item["Picture"], uri);
                             }
                             else if (string.IsNullOrEmpty(uri))
                             {
-                                item["Picture"] = string.Empty;
+                                TryUpdateValue(item, "Picture", (string)item["Picture"], string.Empty);
                             }                       
                         }
                         catch (Exception)
