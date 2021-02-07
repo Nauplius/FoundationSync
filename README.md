@@ -1,3 +1,7 @@
+**Repository Moved**
+
+This repository has moved to [tseward/FoundationSync](https://github.com/tseward/FoundationSync).
+
 FoundationSync
 ==============
 
